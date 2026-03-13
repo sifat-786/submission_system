@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduSubmit — Sign In</title>
+  <meta name="description" content="Sign in to EduSubmit, the HCI-designed learning management assignment submission system." />
+  <link rel="stylesheet" href="css/design-system.css" />
+  <style>
+    body { min-height: 100vh; display: flex; }
+    .login-split { display: flex; width: 100%; }
+
+    /* ── Left panel ── */
+    .login-left {
+      flex: 1;
+      background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4f46e5 100%);
+      display: flex; flex-direction: column;
+      padding: var(--sp-12);
+      position: relative;
+      overflow: hidden;
+    }
+    .login-left::before {
+      content: "";
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    }
+    .login-brand { display: flex; align-items: center; gap: var(--sp-3); position: relative; }
+    .login-brand-icon {
+      width: 48px; height: 48px;
+      background: rgba(255,255,255,.15);
+      border-radius: var(--r-lg);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.5rem;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255,255,255,.2);
+    }
+    .login-brand-text { color: #fff; }
+    .login-brand-name { font-size: var(--text-2xl); font-weight: var(--fw-black); line-height: 1; }
+    .login-brand-sub  { font-size: var(--text-xs); opacity: .6; }
+
+    .login-hero { flex: 1; display: flex; flex-direction: column; justify-content: center; position: relative; }
+    .login-hero h1 {
+      font-size: 2.8rem; font-weight: var(--fw-black);
+      color: #fff; line-height: 1.15;
+      margin-bottom: var(--sp-5);
+    }
+    .login-hero h1 span { color: #a78bfa; }
+    .login-hero p { color: rgba(255,255,255,.65); font-size: var(--text-base); line-height: 1.7; max-width: 380px; }
+
+    .feature-list { margin-top: var(--sp-8); display: flex; flex-direction: column; gap: var(--sp-4); }
+    .feature-item {
+      display: flex; align-items: center; gap: var(--sp-3);
+      color: rgba(255,255,255,.8); font-size: var(--text-sm);
+    }
+    .feature-icon {
+      width: 32px; height: 32px;
+      background: rgba(255,255,255,.1);
+      border-radius: var(--r-md);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: .9rem;
+    }
+
+    .login-testimonial {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: var(--r-lg);
+      padding: var(--sp-5);
+      position: relative;
+      margin-top: var(--sp-8);
+    }
+    .login-testimonial p { color: rgba(255,255,255,.8); font-size: var(--text-sm); font-style: italic; }
+    .login-testimonial-author { color: rgba(255,255,255,.5); font-size: var(--text-xs); margin-top: var(--sp-3); }
+
+    /* ── Right panel ── */
+    .login-right {
+      width: 480px;
+      background: var(--bg-surface);
+      display: flex; align-items: center; justify-content: center;
+      padding: var(--sp-8);
+      flex-shrink: 0;
+    }
+    .login-form-wrap { width: 100%; max-width: 380px; }
+
+    .login-form-title { font-size: var(--text-3xl); font-weight: var(--fw-black); margin-bottom: var(--sp-1); }
+    .login-form-sub   { color: var(--text-secondary); font-size: var(--text-sm); margin-bottom: var(--sp-8); }
+
+    /* Role tabs */
+    .role-tabs { display: flex; background: var(--bg-surface-2); border-radius: var(--r-lg); padding: 4px; margin-bottom: var(--sp-6); gap: 4px; }
+    .role-tab {
+      flex: 1; padding: var(--sp-3); border: none; background: transparent;
+      border-radius: var(--r-md);
+      font-family: var(--font); font-weight: var(--fw-medium); font-size: var(--text-sm);
+      cursor: pointer; color: var(--text-secondary);
+      transition: all var(--t-fast);
+      display: flex; align-items: center; justify-content: center; gap: var(--sp-2);
+    }
+    .role-tab:hover { color: var(--text-primary); }
+    .role-tab.active { background: var(--bg-surface); box-shadow: var(--shadow-sm); color: var(--text-primary); font-weight: var(--fw-semi); }
+
+    .form-pass-wrap { position: relative; }
+    .pass-toggle {
+      position: absolute; right: var(--sp-3); top: 50%;
+      transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--text-muted); font-size: .9rem; padding: var(--sp-1);
+    }
+    .pass-toggle:hover { color: var(--text-secondary); }
+
+    .login-btn {
+      width: 100%; margin-top: var(--sp-2);
+      background: linear-gradient(135deg, var(--brand) 0%, #7c3aed 100%);
+      box-shadow: 0 4px 16px var(--brand-glow);
+    }
+    .login-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px var(--brand-glow); }
+
+    .login-forgot { text-align: right; margin-top: var(--sp-1); }
+    .login-forgot a { font-size: var(--text-xs); color: var(--brand); text-decoration: none; }
+
+    .login-divider {
+      display: flex; align-items: center; gap: var(--sp-3);
+      margin: var(--sp-5) 0;
+      color: var(--text-muted); font-size: var(--text-xs);
+    }
+    .login-divider::before, .login-divider::after {
+      content: ""; flex: 1; height: 1px; background: var(--border);
+    }
+
+    .demo-creds {
+      background: var(--brand-light);
+      border: 1px solid rgba(99,102,241,.2);
+      border-radius: var(--r-md);
+      padding: var(--sp-3) var(--sp-4);
+      font-size: var(--text-xs);
+      color: var(--brand-dark);
+    }
+    .demo-creds strong { display: block; font-weight: var(--fw-semi); margin-bottom: var(--sp-1); }
+
+    /* Error */
+    .login-error {
+      background: var(--danger-bg);
+      border: 1px solid rgba(239,68,68,.25);
+      border-radius: var(--r-md);
+      color: var(--danger-text);
+      font-size: var(--text-sm);
+      padding: var(--sp-3) var(--sp-4);
+      margin-bottom: var(--sp-4);
+      display: none;
+    }
+    .login-error.show { display: block; }
+
+    /* Dark mode for right panel */
+    [data-theme="dark"] .login-right { background: #1e293b; }
+
+    /* Theme toggle top right */
+    .login-theme { position: fixed; top: var(--sp-4); right: var(--sp-4); z-index: 100; }
+
+    @media (max-width: 900px) {
+      .login-left { display: none; }
+      .login-right { width: 100%; padding: var(--sp-6); }
+    }
+  </style>
+</head>
+<body>
+
+<button class="theme-toggle login-theme" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
+
+<div class="login-split">
+  <!-- LEFT PANEL -->
+  <div class="login-left">
+    <div class="login-brand">
+      <div class="login-brand-icon">🎓</div>
+      <div class="login-brand-text">
+        <div class="login-brand-name">EduSubmit</div>
+        <div class="login-brand-sub">Learning Management System</div>
+      </div>
+    </div>
+
+    <div class="login-hero">
+      <h1>Submit smarter,<br/>learn <span>better</span></h1>
+      <p>A human-centered assignment submission platform designed with HCI principles to eliminate confusion and reduce submission errors.</p>
+
+      <div class="feature-list" role="list">
+        <div class="feature-item" role="listitem">
+          <div class="feature-icon">✅</div>
+          <span>Real-time submission confirmation & tracking</span>
+        </div>
+        <div class="feature-item" role="listitem">
+          <div class="feature-icon">⚠️</div>
+          <span>Intelligent file validation before upload</span>
+        </div>
+        <div class="feature-item" role="listitem">
+          <div class="feature-icon">📊</div>
+          <span>Clear grades with detailed instructor feedback</span>
+        </div>
+        <div class="feature-item" role="listitem">
+          <div class="feature-icon">♿</div>
+          <span>WCAG AA accessible — keyboard & screen reader ready</span>
+        </div>
+      </div>
+
+      <div class="login-testimonial" aria-hidden="true">
+        <p>"Finally a system where I actually know my submission went through. The confirmation screen saved me so much anxiety."</p>
+        <div class="login-testimonial-author">— Alex J., Computer Science Student</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="login-right">
+    <div class="login-form-wrap animate-slideUp">
+      <h2 class="login-form-title">Welcome back</h2>
+      <p class="login-form-sub">Sign in to continue to your dashboard.</p>
+
+      <!-- Role Selection (Hick's Law: clear, limited choice) -->
+      <div class="role-tabs" role="tablist" aria-label="Select your role">
+        <button class="role-tab active" id="tab-student" role="tab" aria-selected="true" aria-controls="panel-student">
+          🎓 Student
+        </button>
+        <button class="role-tab" id="tab-instructor" role="tab" aria-selected="false" aria-controls="panel-instructor">
+          👨‍🏫 Instructor
+        </button>
+      </div>
+
+      <!-- Error display (Nielsen H9: help recognize & recover) -->
+      <div class="login-error" id="loginError" role="alert" aria-live="polite">
+        ⚠️ Invalid credentials. Please check your email and password.
+      </div>
+
+      <form id="loginForm" novalidate>
+        <div class="form-group">
+          <label class="form-label" for="emailInput">University Email <span class="required" aria-hidden="true">*</span></label>
+          <input
+            class="form-input" type="email" id="emailInput"
+            placeholder="you@university.edu"
+            autocomplete="email"
+            aria-describedby="emailHint"
+            aria-required="true"
+          />
+          <span class="form-hint" id="emailHint">Use your @university.edu address</span>
+          <span class="form-error" id="emailError" role="alert"></span>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="passwordInput">Password <span class="required" aria-hidden="true">*</span></label>
+          <div class="form-pass-wrap">
+            <input
+              class="form-input" type="password" id="passwordInput"
+              placeholder="Enter your password"
+              autocomplete="current-password"
+              aria-required="true"
+              aria-describedby="passwordError"
+            />
+            <button type="button" class="pass-toggle" id="passToggle" aria-label="Show password">👁️</button>
+          </div>
+          <span class="form-error" id="passwordError" role="alert"></span>
+        </div>
+
+        <div class="login-forgot">
+          <a href="#" role="button" tabindex="0">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg login-btn" id="loginBtn">
+          <span id="loginBtnText">Sign In</span>
+          <span id="loginSpinner" style="display:none" aria-hidden="true">⟳</span>
+        </button>
+      </form>
+
+      <div class="login-divider" aria-hidden="true">Demo Credentials</div>
+
+      <div class="demo-creds" role="note" aria-label="Demo credentials">
+        <strong>Quick fill (click to use):</strong>
+        Student: <a href="#" id="fillStudent" style="color:inherit;font-weight:600">alex.johnson@university.edu / student123</a><br/>
+        Instructor: <a href="#" id="fillInstructor" style="color:inherit;font-weight:600">s.chen@university.edu / instructor123</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script>
+  // ── Theme ──────────────────────────────────────────────────────────────────
+  const savedTheme = localStorage.getItem("hci_theme") || "light";
+  document.documentElement.setAttribute("data-theme", savedTheme);
+  const themeBtn = document.getElementById("themeToggle");
+  themeBtn.textContent = savedTheme === "dark" ? "☀️" : "🌙";
+  themeBtn.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const next = cur === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", next);
+    localStorage.setItem("hci_theme", next);
+    themeBtn.textContent = next === "dark" ? "☀️" : "🌙";
+  });
+
+  // ── Role Tabs ──────────────────────────────────────────────────────────────
+  let activeRole = "student";
+  document.querySelectorAll(".role-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll(".role-tab").forEach(t => { t.classList.remove("active"); t.setAttribute("aria-selected","false"); });
+      tab.classList.add("active");
+      tab.setAttribute("aria-selected","true");
+      activeRole = tab.id.replace("tab-","");
+    });
+  });
+
+  // ── Demo Fill ──────────────────────────────────────────────────────────────
+  document.getElementById("fillStudent").addEventListener("click", e => {
+    e.preventDefault();
+    document.getElementById("emailInput").value = "alex.johnson@university.edu";
+    document.getElementById("passwordInput").value = "student123";
+    activeRole = "student";
+    document.querySelectorAll(".role-tab").forEach(t => { t.classList.remove("active"); t.setAttribute("aria-selected","false"); });
+    document.getElementById("tab-student").classList.add("active");
+    document.getElementById("tab-student").setAttribute("aria-selected","true");
+  });
+  document.getElementById("fillInstructor").addEventListener("click", e => {
+    e.preventDefault();
+    document.getElementById("emailInput").value = "s.chen@university.edu";
+    document.getElementById("passwordInput").value = "instructor123";
+    activeRole = "instructor";
+    document.querySelectorAll(".role-tab").forEach(t => { t.classList.remove("active"); t.setAttribute("aria-selected","false"); });
+    document.getElementById("tab-instructor").classList.add("active");
+    document.getElementById("tab-instructor").setAttribute("aria-selected","true");
+  });
+
+  // ── Password Toggle ────────────────────────────────────────────────────────
+  document.getElementById("passToggle").addEventListener("click", () => {
+    const inp = document.getElementById("passwordInput");
+    const btn = document.getElementById("passToggle");
+    if (inp.type === "password") { inp.type = "text"; btn.textContent = "🙈"; btn.setAttribute("aria-label","Hide password"); }
+    else { inp.type = "password"; btn.textContent = "👁️"; btn.setAttribute("aria-label","Show password"); }
+  });
+
+  // ── Form Validation & Submit ───────────────────────────────────────────────
+  document.getElementById("loginForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const email = document.getElementById("emailInput").value.trim();
+    const pass  = document.getElementById("passwordInput").value;
+    let valid = true;
+
+    // Clear errors
+    document.getElementById("emailError").textContent = "";
+    document.getElementById("emailError").classList.remove("visible");
+    document.getElementById("passwordError").textContent = "";
+    document.getElementById("passwordError").classList.remove("visible");
+    document.getElementById("loginError").classList.remove("show");
+    document.getElementById("emailInput").classList.remove("error");
+    document.getElementById("passwordInput").classList.remove("error");
+
+    if (!email) {
+      setFieldError("emailInput","emailError","Email is required.");
+      valid = false;
+    } else if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) {
+      setFieldError("emailInput","emailError","Please enter a valid email address.");
+      valid = false;
+    }
+    if (!pass) {
+      setFieldError("passwordInput","passwordError","Password is required.");
+      valid = false;
+    }
+    if (!valid) return;
+
+    // Simulate network request
+    const btn = document.getElementById("loginBtn");
+    btn.disabled = true;
+    document.getElementById("loginBtnText").textContent = "Signing in…";
+    document.getElementById("loginSpinner").style.display = "inline-block";
+    document.getElementById("loginSpinner").classList.add("animate-spin");
+
+    await delay(900);
+
+    // Verify credentials
+    const credentials = {
+      student: { email: "alex.johnson@university.edu", pass: "student123" },
+      instructor: { email: "s.chen@university.edu", pass: "instructor123" }
+    };
+    const cred = credentials[activeRole];
+    if (!cred || email !== cred.email || pass !== cred.pass) {
+      btn.disabled = false;
+      document.getElementById("loginBtnText").textContent = "Sign In";
+      document.getElementById("loginSpinner").style.display = "none";
+      document.getElementById("loginError").classList.add("show");
+      document.getElementById("emailInput").classList.add("error");
+      document.getElementById("passwordInput").classList.add("error");
+      return;
+    }
+
+    // Success
+    const user = USERS[activeRole];
+    Session.set(user);
+    window.location.href = activeRole === "instructor" ? "instructor-dashboard.html" : "student-dashboard.html";
+  });
+
+  function setFieldError(inputId, errorId, msg) {
+    document.getElementById(inputId).classList.add("error");
+    const el = document.getElementById(errorId);
+    el.textContent = msg;
+    el.classList.add("visible");
+  }
+  function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+</script>
+</body>
+</html>

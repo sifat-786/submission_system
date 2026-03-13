@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduSubmit — Low-Fidelity Wireframes</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Inter',sans-serif;background:#f0f0f0;color:#222;min-height:100vh}
+    header{background:#222;color:#fff;padding:16px 32px;display:flex;align-items:center;justify-content:space-between}
+    header h1{font-size:1.1rem;font-weight:700}
+    header p{font-size:.8rem;color:#aaa}
+    .tabs{background:#fff;padding:16px 32px;border-bottom:2px solid #e0e0e0;display:flex;gap:8px;flex-wrap:wrap}
+    .tab{padding:8px 18px;border:2px solid #d0d0d0;border-radius:6px;cursor:pointer;background:#fff;font-size:.8rem;font-weight:600;color:#555;transition:all .15s}
+    .tab:hover{border-color:#888;color:#222}
+    .tab.active{background:#222;color:#fff;border-color:#222}
+    .wf-stage{padding:32px;display:none;justify-content:center}
+    .wf-stage.active{display:flex}
+    .wf-wrap{width:900px;background:#fff;border:2px solid #bbb;border-radius:4px;box-shadow:0 4px 24px rgba(0,0,0,.12)}
+    .wf-top{background:#eee;border-bottom:2px solid #ccc;padding:10px 16px;display:flex;align-items:center;gap:8px}
+    .wf-dot{width:12px;height:12px;border-radius:50%;background:#ccc;border:1px solid #aaa}
+    .wf-url{flex:1;background:#ddd;border-radius:4px;height:24px;margin:0 12px;display:flex;align-items:center;padding:0 8px;font-size:.7rem;color:#777}
+
+    /* Wireframe shared primitives */
+    .box{background:#e8e8e8;border:1.5px solid #bbb;border-radius:3px;display:flex;align-items:center;justify-content:center;color:#777;font-size:.72rem;font-weight:600;text-transform:uppercase;letter-spacing:.04em;text-align:center;padding:4px 6px}
+    .box-outline{background:transparent;border:1.5px dashed #bbb;border-radius:3px;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:.7rem;text-align:center;padding:4px 6px}
+    .wf-body{padding:24px;display:grid;gap:16px}
+    .wf-sidebar{width:180px;background:#d8d8d8;border-radius:4px;padding:12px;display:flex;flex-direction:column;gap:8px;flex-shrink:0;min-height:500px}
+    .sb-logo{height:32px;background:#bbb;border-radius:4px}
+    .sb-link{height:24px;background:#c8c8c8;border-radius:3px}
+    .sb-link.active{background:#999}
+    .wf-main{flex:1}
+    .wf-row{display:flex;gap:16px;align-items:start}
+    .row{display:flex;gap:12px}
+    .col{display:flex;flex-direction:column;gap:12px}
+    .stat-box{width:130px;height:72px}
+    .card-box{height:180px}
+    .card-box-sm{height:120px}
+    .table-row{height:36px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px}
+    .table-hdr{height:28px;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:8px;margin-bottom:4px}
+    .text-line{height:10px;background:#e0e0e0;border-radius:2px}
+    .text-line.short{width:60%}
+    .text-line.xshort{width:35%}
+    .btn-box{height:40px;border-radius:4px;}
+    .btn-box.primary{background:#888}
+    .btn-box.secondary{background:#d0d0d0}
+    .drop-zone{height:160px;border:2px dashed #bbb;border-radius:6px;background:#f2f2f2;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#aaa;font-size:.75rem}
+    .input-box{height:36px;background:#f0f0f0;border:1.5px solid #ccc;border-radius:4px}
+    .hdr-line{height:18px;background:#ccc;border-radius:3px;width:50%;margin-bottom:4px}
+    .progress-box{height:12px;border-radius:20px;background:#e0e0e0;position:relative;overflow:hidden}
+    .progress-fill{position:absolute;left:0;top:0;bottom:0;background:#999;border-radius:20px}
+    .badge-box{height:22px;width:70px;border-radius:20px;background:#d0d0d0}
+    .annotation{font-size:.65rem;color:#999;font-style:italic;position:relative;margin-top:2px}
+    .section-label{font-size:.7rem;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #e0e0e0;padding-bottom:4px;margin-bottom:4px}
+    .checklist-row{height:20px;display:flex;align-items:center;gap:6px}
+    .check-sq{width:14px;height:14px;border:1.5px solid #bbb;border-radius:2px;flex-shrink:0}
+    .check-sq.done{background:#999;border-color:#999}
+    .ring{width:80px;height:80px;border-radius:50%;border:6px solid #bbb;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:700;color:#888}
+    .modal-overlay{background:rgba(0,0,0,.12);border-radius:4px;padding:12px;display:flex;align-items:center;justify-content:center}
+    .modal-box{background:#fff;border:2px solid #bbb;border-radius:6px;padding:16px;width:320px}
+    .wf-label{font-size:.65rem;background:#333;color:#fff;padding:2px 6px;border-radius:2px;display:inline-block}
+    .steps-bar{display:flex;align-items:center;gap:4px;padding:10px 16px;background:#f5f5f5;border-bottom:1.5px solid #ddd}
+    .step{display:flex;align-items:center;gap:4px;font-size:.7rem;color:#aaa}
+    .step.done{color:#555}.step.active{color:#222;font-weight:700}
+    .step-dot{width:18px;height:18px;border-radius:50%;background:#ddd;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:#888}
+    .step.done .step-dot{background:#888;color:#fff}.step.active .step-dot{background:#333;color:#fff}
+    .step-arr{color:#ccc;font-size:.7rem}
+    .topbar-wf{height:44px;background:#fafafa;border-bottom:1.5px solid #ddd;display:flex;align-items:center;padding:0 16px;gap:12px}
+    .wf-avatar{width:28px;height:28px;border-radius:50%;background:#bbb}
+    .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+    .grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>EduSubmit — Low-Fidelity Wireframes</h1>
+    <p>Grayscale structural wireframes · Phase 2 · HCI Process Documentation</p>
+  </div>
+  <div style="font-size:.75rem;color:#888">6 screens</div>
+</header>
+
+<div class="tabs" role="tablist" aria-label="Select wireframe screen">
+  <button class="tab active" role="tab" aria-selected="true"  onclick="show(0)">1. Login</button>
+  <button class="tab" role="tab" aria-selected="false" onclick="show(1)">2. Student Dashboard</button>
+  <button class="tab" role="tab" aria-selected="false" onclick="show(2)">3. Assignment Detail</button>
+  <button class="tab" role="tab" aria-selected="false" onclick="show(3)">4. Upload Screen</button>
+  <button class="tab" role="tab" aria-selected="false" onclick="show(4)">5. Confirmation</button>
+  <button class="tab" role="tab" aria-selected="false" onclick="show(5)">6. Instructor Grading</button>
+</div>
+
+<!-- ── SCREEN 1: LOGIN ─────────────────────────────────────────────────── -->
+<div class="wf-stage active" id="s0">
+<div class="wf-wrap" style="width:900px;min-height:600px">
+  <div class="wf-top"><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-url">file:///SubmissionSystem/index.html</div></div>
+  <div style="display:grid;grid-template-columns:1fr 380px;min-height:560px">
+    <!-- Left panel -->
+    <div style="background:#e8e8e8;padding:32px;display:flex;flex-direction:column;gap:24px">
+      <div style="display:flex;align-items:center;gap:12px"><div style="width:40px;height:40px" class="box">Logo</div><div><div class="text-line" style="width:100px;margin-bottom:4px"></div><div class="text-line short" style="height:8px"></div></div></div>
+      <div class="col" style="flex:1;justify-content:center">
+        <div style="height:28px;background:#bbb;border-radius:3px;width:70%;margin-bottom:8px"></div>
+        <div style="height:14px;background:#ccc;border-radius:2px;width:90%;margin-bottom:4px"></div>
+        <div style="height:14px;background:#ccc;border-radius:2px;width:80%"></div>
+        <div class="col" style="gap:10px;margin-top:20px">
+          <div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px" class="box"></div><div class="text-line" style="width:160px;background:#ccc"></div></div>
+          <div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px" class="box"></div><div class="text-line" style="width:140px;background:#ccc"></div></div>
+          <div style="display:flex;align-items:center;gap:8px"><div style="width:28px;height:28px" class="box"></div><div class="text-line" style="width:150px;background:#ccc"></div></div>
+        </div>
+      </div>
+      <div class="wf-label">Left panel: Brand + feature highlights</div>
+    </div>
+    <!-- Right form -->
+    <div style="padding:40px;display:flex;flex-direction:column;justify-content:center;gap:16px">
+      <div class="hdr-line" style="width:60%"></div>
+      <div class="text-line short" style="height:8px"></div>
+      <!-- Role tabs -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;background:#eee;padding:4px;border-radius:6px">
+        <div class="box" style="background:#888;color:#fff">Student</div>
+        <div class="box">Instructor</div>
+      </div>
+      <span class="annotation">↑ Hick's Law: 2 clear choices only</span>
+      <div class="col" style="gap:12px">
+        <div><div class="text-line xshort" style="height:8px;margin-bottom:4px"></div><div class="input-box"></div></div>
+        <div><div class="text-line xshort" style="height:8px;margin-bottom:4px"></div><div class="input-box"></div></div>
+      </div>
+      <div class="btn-box primary"></div>
+      <span class="annotation">↑ Fitts' Law: Full-width primary CTA</span>
+      <div style="height:1px;background:#eee;margin:4px 0"></div>
+      <div class="box-outline" style="height:52px">Demo credentials (quick fill)</div>
+      <div class="wf-label">Error state: inline field errors + banner</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ── SCREEN 2: STUDENT DASHBOARD ───────────────────────────────────── -->
+<div class="wf-stage" id="s1">
+<div class="wf-wrap">
+  <div class="wf-top"><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-url">student-dashboard.html</div></div>
+  <div class="wf-row" style="gap:0">
+    <div class="wf-sidebar">
+      <div class="sb-logo"></div>
+      <div style="height:8px;background:#bbb;border-radius:2px;width:70%;margin:8px 0 4px"></div>
+      <div class="sb-link active"></div><div class="sb-link"></div><div class="sb-link"></div><div class="sb-link"></div>
+      <div style="height:8px;background:#bbb;border-radius:2px;width:60%;margin:12px 0 4px"></div>
+      <div class="sb-link"></div><div class="sb-link"></div>
+      <div style="flex:1"></div>
+      <div style="height:40px;background:#c8c8c8;border-radius:4px"></div>
+    </div>
+    <div class="wf-main" style="padding:16px">
+      <div class="topbar-wf"><div class="text-line" style="width:120px;background:#e0e0e0"></div><div style="flex:1"></div><div class="wf-avatar"></div><div class="wf-avatar" style="width:22px;height:22px"></div></div>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+        <!-- Welcome banner -->
+        <div class="box" style="height:80px;background:#cccccc">Welcome Banner + Pending Count</div>
+        <!-- Stats row -->
+        <div class="grid-4"><div class="box stat-box">Courses</div><div class="box stat-box">Assignments</div><div class="box stat-box">Submitted</div><div class="box stat-box">Avg Grade</div></div>
+        <!-- 2-col -->
+        <div style="display:grid;grid-template-columns:1fr 200px;gap:12px">
+          <div class="col gap-3">
+            <div class="box card-box">Upcoming Assignments List<br/><span style="font-size:.65rem;font-weight:400">with urgency indicators</span></div>
+            <div class="col">
+              <div class="section-label">My Courses</div>
+              <div class="grid-2"><div class="box" style="height:80px">Course Card 1</div><div class="box" style="height:80px">Course Card 2</div><div class="box" style="height:80px">Course Card 3</div><div class="box" style="height:80px">Course Card 4</div></div>
+            </div>
+          </div>
+          <div class="col">
+            <div class="box card-box-sm">Notifications<br/><span style="font-size:.65rem;font-weight:400">unread indicators</span></div>
+            <div class="box" style="height:100px">Quick Actions<br/><span style="font-size:.65rem;font-weight:400">3 buttons (Hick's Law)</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ── SCREEN 3: ASSIGNMENT DETAIL ───────────────────────────────────── -->
+<div class="wf-stage" id="s2">
+<div class="wf-wrap">
+  <div class="wf-top"><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-url">assignment-detail.html?assignment=a002</div></div>
+  <div class="wf-row" style="gap:0">
+    <div class="wf-sidebar"><div class="sb-logo"></div><div class="sb-link"></div><div class="sb-link"></div><div class="sb-link active"></div><div class="sb-link"></div></div>
+    <div class="wf-main">
+      <div class="topbar-wf">
+        <div style="display:flex;gap:8px;align-items:center;font-size:.7rem;color:#888"><span>Dashboard</span><span>/</span><span>CS 301</span><span>/</span><strong style="color:#333">Assignment</strong></div>
+        <div style="flex:1"></div><div class="wf-avatar"></div>
+      </div>
+      <!-- Step progress -->
+      <div class="steps-bar">
+        <div class="step done"><div class="step-dot">✓</div><span>Review</span></div>
+        <div class="step-arr">→</div>
+        <div class="step active"><div class="step-dot">2</div><span>Upload</span></div>
+        <div class="step-arr">→</div>
+        <div class="step"><div class="step-dot">3</div><span>Confirm</span></div>
+      </div>
+      <div style="padding:16px;display:grid;grid-template-columns:1fr 200px;gap:12px;align-items:start">
+        <div class="col">
+          <div class="box card-box" style="height:120px">Assignment Title, Description, Max Pts, Formats</div>
+          <div class="drop-zone">📂 Upload Zone (Drag & Drop)<div style="font-size:.65rem">Signifier: dashed border + icon = droppable</div></div>
+          <span class="annotation">↑ Norman: Affordance & Signifiers</span>
+          <div class="box btn-box primary" style="height:50px">SUBMIT ASSIGNMENT (large — Fitts' Law)</div>
+        </div>
+        <div class="col">
+          <div class="box" style="height:70px;background:#d0d0d0">⏰ Deadline Countdown</div>
+          <div class="col" style="gap:6px">
+            <div class="section-label">Checklist</div>
+            <div class="checklist-row"><div class="check-sq done"></div><div class="text-line xshort"></div></div>
+            <div class="checklist-row"><div class="check-sq done"></div><div class="text-line xshort"></div></div>
+            <div class="checklist-row"><div class="check-sq"></div><div class="text-line xshort"></div></div>
+          </div>
+          <div class="box card-box-sm">Error States<br/><span style="font-size:.65rem;font-weight:400">format / size / deadline / network</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ── SCREEN 4: UPLOAD IN PROGRESS ─────────────────────────────────── -->
+<div class="wf-stage" id="s3">
+<div class="wf-wrap">
+  <div class="wf-top"><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-url">assignment-detail.html — uploading state</div></div>
+  <div class="wf-row" style="gap:0">
+    <div class="wf-sidebar"><div class="sb-logo"></div><div class="sb-link"></div><div class="sb-link active"></div><div class="sb-link"></div><div class="sb-link"></div></div>
+    <div class="wf-main">
+      <div class="topbar-wf"><div style="flex:1"></div><div class="wf-avatar"></div></div>
+      <div class="steps-bar">
+        <div class="step done"><div class="step-dot">✓</div><span>Review</span></div>
+        <div class="step-arr">→</div>
+        <div class="step active"><div class="step-dot">2</div><span>Upload</span></div>
+        <div class="step-arr">→</div>
+        <div class="step"><div class="step-dot">3</div><span>Confirm</span></div>
+      </div>
+      <div style="padding:16px;max-width:600px;margin:0 auto">
+        <!-- File preview -->
+        <div class="col" style="gap:12px">
+          <div class="box" style="height:50px">Selected File: my_assignment.zip · 3.2 MB   ✕</div>
+          <!-- Progress bar -->
+          <div class="col" style="gap:4px">
+            <div style="display:flex;justify-content:space-between;font-size:.7rem;color:#888"><span>Uploading…</span><span id="pct">67%</span></div>
+            <div class="progress-box" style="height:14px"><div class="progress-fill" id="pfill" style="width:67%"></div></div>
+            <span class="annotation">↑ Nielsen H1: Visibility of System Status</span>
+          </div>
+          <!-- Confirm modal -->
+          <div class="section-label" style="margin-top:8px">Confirmation Modal (before submit)</div>
+          <div class="modal-overlay">
+            <div class="modal-box">
+              <div class="hdr-line" style="margin-bottom:8px"></div>
+              <div class="text-line" style="margin-bottom:4px"></div>
+              <div class="text-line short" style="margin-bottom:12px"></div>
+              <div class="box" style="height:50px;background:#f0f0f0">Details summary</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+                <div class="btn-box secondary"></div>
+                <div class="btn-box primary"></div>
+              </div>
+              <span class="annotation">↑ Nielsen H3: User Control — confirm before commit</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ── SCREEN 5: CONFIRMATION ────────────────────────────────────────── -->
+<div class="wf-stage" id="s4">
+<div class="wf-wrap" style="width:600px">
+  <div class="wf-top"><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-url">confirmation.html</div></div>
+  <div style="padding:40px;display:flex;flex-direction:column;align-items:center;gap:16px">
+    <div class="ring">✓</div>
+    <div style="text-align:center">
+      <div class="hdr-line" style="width:200px;margin:0 auto 6px"></div>
+      <div class="text-line" style="width:260px;margin:0 auto"></div>
+    </div>
+    <!-- Steps done -->
+    <div style="display:flex;gap:8px;align-items:center;font-size:.7rem;color:#999">
+      <span>✓ Review</span><span>→</span><span>✓ Upload</span><span>→</span><strong style="color:#666">✓ Confirmed</strong>
+    </div>
+    <!-- Submission ID box -->
+    <div class="box" style="width:100%;height:70px;background:#ddd">Submission ID — monospaced<br/><span style="font-size:.65rem;font-weight:400">Nielsen H1: visible system confirmation</span></div>
+    <!-- Details -->
+    <div style="width:100%;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;justify-content:space-between"><div class="text-line" style="width:80px"></div><div class="text-line" style="width:140px"></div></div>
+      <div style="display:flex;justify-content:space-between"><div class="text-line" style="width:60px"></div><div class="text-line" style="width:120px"></div></div>
+      <div style="display:flex;justify-content:space-between"><div class="text-line" style="width:70px"></div><div class="text-line" style="width:100px"></div></div>
+      <div style="display:flex;justify-content:space-between"><div class="text-line" style="width:75px"></div><div class="badge-box"></div></div>
+    </div>
+    <div class="box" style="width:100%;height:50px;background:#e8e8e8">What happens next? info panel</div>
+    <div class="grid-2" style="width:100%">
+      <div class="btn-box primary"></div>
+      <div class="btn-box secondary"></div>
+    </div>
+    <span class="annotation">Print confirmation button below</span>
+  </div>
+</div>
+</div>
+
+<!-- ── SCREEN 6: INSTRUCTOR GRADING ──────────────────────────────────── -->
+<div class="wf-stage" id="s5">
+<div class="wf-wrap" style="width:980px">
+  <div class="wf-top"><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-dot"></div><div class="wf-url">grading.html</div></div>
+  <div class="wf-row" style="gap:0">
+    <div class="wf-sidebar" style="width:140px"><div class="sb-logo"></div><div class="sb-link"></div><div class="sb-link active"></div></div>
+    <div class="wf-main">
+      <div class="topbar-wf">
+        <div style="flex:1;font-size:.7rem;color:#888">Dashboard / Grading</div>
+        <div style="display:flex;gap:6px"><div class="btn-box secondary" style="width:70px;height:28px"></div><div class="text-line" style="width:40px;background:#d0d0d0;margin:auto 0"></div><div class="btn-box secondary" style="width:70px;height:28px"></div></div>
+        <div class="wf-avatar" style="margin-left:8px"></div>
+      </div>
+      <div style="padding:12px;display:grid;grid-template-columns:180px 1fr 220px;gap:12px">
+        <!-- Student list -->
+        <div style="background:#f5f5f5;border:1px solid #ddd;border-radius:4px;padding:8px;display:flex;flex-direction:column;gap:4px">
+          <div class="section-label">Students (7)</div>
+          <div style="height:36px;background:#999;border-radius:3px;border-left:3px solid #555;display:flex;align-items:center;padding:0 8px;gap:6px"><div style="width:20px;height:20px;border-radius:50%;background:#777"></div><div class="text-line" style="width:70px;background:#ddd"></div></div>
+          <div style="height:36px;background:#e8e8e8;border-radius:3px;display:flex;align-items:center;padding:0 8px;gap:6px"><div style="width:20px;height:20px;border-radius:50%;background:#bbb"></div><div class="text-line" style="width:70px;background:#ccc"></div></div>
+          <div style="height:36px;background:#e8e8e8;border-radius:3px"></div>
+          <div style="height:36px;background:#e8e8e8;border-radius:3px"></div>
+          <div style="height:36px;background:#e8e8e8;border-radius:3px"></div>
+        </div>
+        <!-- Viewer -->
+        <div class="col" style="gap:8px">
+          <div class="box" style="height:40px;">Student name · file info · [Download] [Status badge]</div>
+          <div class="box-outline" style="height:180px">File Preview / Viewer Area<br/><span style="font-size:.65rem">[Open File Viewer button]</span></div>
+        </div>
+        <!-- Grade panel -->
+        <div style="background:#f5f5f5;border:1px solid #ddd;border-radius:4px;padding:12px;display:flex;flex-direction:column;gap:8px">
+          <div class="section-label">Grade Entry</div>
+          <div class="ring" style="margin:0 auto;font-size:1.4rem">94</div>
+          <span class="annotation">↑ Fitts' Law: large interactive element</span>
+          <div class="input-box"></div>
+          <div style="height:4px;background:#ddd;border-radius:2px"><div style="width:94%;height:100%;background:#999;border-radius:2px"></div></div>
+          <div class="section-label">Rubric</div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <div class="rubric-wf" style="display:flex;justify-content:space-between;font-size:.7rem;padding:4px 0;border-bottom:1px solid #e0e0e0"><span>BFS Correct.</span><span>25 / 25</span></div>
+            <div class="rubric-wf" style="display:flex;justify-content:space-between;font-size:.7rem;padding:4px 0;border-bottom:1px solid #e0e0e0"><span>DFS Correct.</span><span>25 / 25</span></div>
+            <div class="rubric-wf" style="display:flex;justify-content:space-between;font-size:.7rem;padding:4px 0;border-bottom:1px solid #e0e0e0"><span>Complexity</span><span>20 / 25</span></div>
+            <div class="rubric-wf" style="display:flex;justify-content:space-between;font-size:.7rem;padding:4px 0"><span>Test Cases</span><span>24 / 25</span></div>
+          </div>
+          <div class="box-outline" style="height:60px;font-size:.7rem">Feedback Textarea</div>
+          <div class="btn-box primary"></div>
+          <div class="btn-box" style="background:#bbb"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll(".wf-stage").forEach((el,i) => el.classList.toggle("active", i===n));
+  document.querySelectorAll(".tab").forEach((el,i) => { el.classList.toggle("active", i===n); el.setAttribute("aria-selected", i===n ? "true" : "false"); });
+}
+</script>
+</body>
+</html>

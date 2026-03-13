@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduSubmit — Submission Confirmed</title>
+  <link rel="stylesheet" href="css/design-system.css"/>
+  <style>
+    .confirm-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: var(--sp-8); background: var(--bg-page); }
+    .confirm-card { width: min(600px, 100%); }
+
+    /* Success animation */
+    .success-icon {
+      width: 88px; height: 88px;
+      background: linear-gradient(135deg, #10b981, #34d399);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.5rem;
+      margin: 0 auto var(--sp-6);
+      box-shadow: 0 8px 24px rgba(16,185,129,.35);
+      animation: bounce .6s ease .2s both;
+    }
+    @keyframes bounce {
+      0%   { transform: scale(0); }
+      60%  { transform: scale(1.15); }
+      80%  { transform: scale(0.95); }
+      100% { transform: scale(1); }
+    }
+
+    .confirm-header { text-align: center; padding: var(--sp-8) var(--sp-8) var(--sp-6); }
+    .confirm-title  { font-size: var(--text-3xl); font-weight: var(--fw-black); margin-bottom: var(--sp-2); }
+    .confirm-sub    { color: var(--text-secondary); font-size: var(--text-base); }
+
+    .submission-id-box {
+      background: linear-gradient(135deg, var(--brand-light), rgba(167,139,250,.15));
+      border: 2px solid rgba(99,102,241,.25);
+      border-radius: var(--r-xl);
+      padding: var(--sp-5) var(--sp-6);
+      text-align: center;
+      margin-bottom: var(--sp-5);
+    }
+    .submission-id-label { font-size: var(--text-xs); font-weight: var(--fw-semi); color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; margin-bottom: var(--sp-2); }
+    .submission-id-value { font-size: var(--text-xl); font-weight: var(--fw-black); color: var(--brand); font-family: monospace; letter-spacing: .04em; }
+
+    .detail-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--sp-3) 0;
+      border-bottom: 1px solid var(--border);
+      font-size: var(--text-sm);
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { color: var(--text-secondary); font-weight: var(--fw-medium); }
+    .detail-value { font-weight: var(--fw-semi); text-align: right; }
+
+    /* Steps 3 done */
+    .steps-done { display: flex; align-items: center; justify-content: center; gap: var(--sp-3); font-size: var(--text-sm); padding: var(--sp-4) 0; color: var(--success); }
+
+    .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-3); }
+    [data-theme="dark"] .submission-id-box { background: rgba(99,102,241,.12); border-color: rgba(99,102,241,.3); }
+  </style>
+</head>
+<body>
+  <div class="confirm-page">
+    <div class="confirm-card card animate-slideUp" role="main" aria-labelledby="confirmTitle">
+
+      <div class="confirm-header">
+        <!-- Success state feedback (Nielsen H1, Norman Feedback) -->
+        <div class="success-icon" aria-hidden="true">✅</div>
+        <h1 class="confirm-title" id="confirmTitle">Assignment Submitted!</h1>
+        <p class="confirm-sub">Your submission has been received and recorded successfully.</p>
+      </div>
+
+      <!-- Steps complete indicator -->
+      <div class="steps-done" aria-label="All submission steps complete">
+        <span>✓ Review</span>
+        <span style="color:var(--border)">→</span>
+        <span>✓ Upload</span>
+        <span style="color:var(--border)">→</span>
+        <span style="font-weight:700">✓ Confirmed</span>
+      </div>
+
+      <div class="card-body">
+        <!-- Submission ID (system feedback) -->
+        <div class="submission-id-box" role="status" aria-label="Submission ID">
+          <div class="submission-id-label">Submission ID</div>
+          <div class="submission-id-value" id="subIdDisplay">SUB-20260226-XXXX</div>
+          <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:var(--sp-2)">Save this ID for your records</div>
+        </div>
+
+        <!-- Details -->
+        <div style="margin-bottom:var(--sp-5)">
+          <div class="detail-row"><span class="detail-label">Assignment</span><span class="detail-value" id="detAssignment">—</span></div>
+          <div class="detail-row"><span class="detail-label">Course</span><span class="detail-value" id="detCourse">—</span></div>
+          <div class="detail-row"><span class="detail-label">File Submitted</span><span class="detail-value" id="detFile">—</span></div>
+          <div class="detail-row"><span class="detail-label">File Size</span><span class="detail-value" id="detSize">—</span></div>
+          <div class="detail-row"><span class="detail-label">Submitted At</span><span class="detail-value" id="detTime">—</span></div>
+          <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value"><span class="badge badge-success">✓ Submitted</span></span></div>
+        </div>
+
+        <!-- Info alert -->
+        <div class="alert alert-info" role="note" style="margin-bottom:var(--sp-6)">
+          <span class="alert-icon">ℹ️</span>
+          <div>
+            <div class="alert-title">What happens next?</div>
+            Your instructor will review your submission. You will be notified when your grade is posted. Average grading time is 3–5 business days.
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="action-grid">
+          <a href="student-dashboard.html" class="btn btn-primary btn-md" aria-label="Return to your dashboard">🏠 Go to Dashboard</a>
+          <a href="grades.html" class="btn btn-secondary btn-md" aria-label="View grades page">📊 View Grades</a>
+        </div>
+
+        <div style="text-align:center;margin-top:var(--sp-4)">
+          <button class="btn btn-ghost btn-sm" onclick="window.print()" aria-label="Print confirmation">🖨️ Print Confirmation</button>
+        </div>
+      </div>
+
+      <!-- Theme toggle -->
+      <div style="position:absolute;top:var(--sp-4);right:var(--sp-4)">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙</button>
+      </div>
+    </div>
+  </div>
+
+<script src="js/data.js"></script>
+<script>
+  // Theme
+  const t = localStorage.getItem("hci_theme") || "light";
+  document.documentElement.setAttribute("data-theme", t);
+  const tb = document.getElementById("themeToggle");
+  tb.textContent = t === "dark" ? "☀️" : "🌙";
+  tb.addEventListener("click", () => {
+    const cur = document.documentElement.getAttribute("data-theme");
+    const nxt = cur === "dark" ? "light" : "dark";
+    document.documentElement.setAttribute("data-theme", nxt);
+    localStorage.setItem("hci_theme", nxt);
+    tb.textContent = nxt === "dark" ? "☀️" : "🌙";
+  });
+
+  // Populate from session
+  let sub;
+  try { sub = JSON.parse(sessionStorage.getItem("lastSubmission")); } catch { sub = null; }
+  if (!sub) {
+    sub = {
+      submissionId: generateId(),
+      assignmentTitle: "Graph Traversal Algorithms",
+      courseCode: "CS 301", courseTitle: "Data Structures & Algorithms",
+      fileName: "my_submission.zip", fileSize: "2.4",
+      submittedAt: new Date().toISOString()
+    };
+  }
+  document.getElementById("subIdDisplay").textContent = sub.submissionId;
+  document.getElementById("detAssignment").textContent = sub.assignmentTitle;
+  document.getElementById("detCourse").textContent = `${sub.courseCode} — ${sub.courseTitle}`;
+  document.getElementById("detFile").textContent = sub.fileName;
+  document.getElementById("detSize").textContent = `${sub.fileSize} MB`;
+  document.getElementById("detTime").textContent = formatDate(sub.submittedAt);
+  document.title = `EduSubmit — Confirmed ${sub.submissionId}`;
+</script>
+</body>
+</html>

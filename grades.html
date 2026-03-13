@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduSubmit — My Grades</title>
+  <link rel="stylesheet" href="css/design-system.css"/>
+  <style>
+    .grade-ring-wrap { position: relative; display: flex; align-items: center; justify-content: center; }
+    .grade-ring-val { position: absolute; text-align: center; }
+    .grade-ring-num { font-size: var(--text-2xl); font-weight: var(--fw-black); }
+    .grade-ring-lbl { font-size: var(--text-xs); color: var(--text-muted); }
+
+    .assignment-grade-row {
+      display: grid; grid-template-columns: auto 1fr auto auto auto;
+      align-items: center; gap: var(--sp-4);
+      padding: var(--sp-5) var(--sp-6);
+      border-bottom: 1px solid var(--border);
+      transition: background var(--t-fast);
+      cursor: pointer;
+      text-decoration: none; color: inherit;
+    }
+    .assignment-grade-row:hover { background: var(--bg-hover); }
+    .assignment-grade-row:last-child { border-bottom: none; }
+
+    .grade-score {
+      font-size: var(--text-xl); font-weight: var(--fw-black);
+      min-width: 60px; text-align: right;
+    }
+    .grade-score.a { color: var(--success); }
+    .grade-score.b { color: var(--brand); }
+    .grade-score.c { color: var(--warning); }
+    .grade-score.pending { color: var(--text-muted); }
+
+    .feedback-panel {
+      background: var(--bg-surface-2);
+      border-left: 3px solid var(--brand);
+      border-radius: 0 var(--r-md) var(--r-md) 0;
+      padding: var(--sp-4) var(--sp-5);
+      font-size: var(--text-sm);
+      margin-top: var(--sp-3);
+      line-height: 1.7;
+      display: none;
+    }
+    .feedback-panel.open { display: block; }
+
+    .gpa-banner {
+      background: linear-gradient(135deg, var(--brand) 0%, #7c3aed 100%);
+      border-radius: var(--r-xl);
+      padding: var(--sp-8);
+      color: white;
+      text-align: center;
+    }
+    .gpa-value { font-size: 4rem; font-weight: var(--fw-black); line-height: 1; }
+    .gpa-label { font-size: var(--text-sm); opacity: .75; margin-top: 4px; }
+
+    .sparkline { height: 60px; width: 100%; }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">🎓</div>
+      <div><div class="sidebar-logo-text">EduSubmit</div><div class="sidebar-logo-sub">Student Portal</div></div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <a href="student-dashboard.html" class="sidebar-link"><span class="sidebar-link-icon">🏠</span><span>Dashboard</span></a>
+      <a href="student-dashboard.html#courses" class="sidebar-link"><span class="sidebar-link-icon">📚</span><span>My Courses</span></a>
+      <a href="assignment-detail.html" class="sidebar-link"><span class="sidebar-link-icon">📝</span><span>Assignments</span><span class="sidebar-badge">3</span></a>
+      <a href="grades.html" class="sidebar-link active" aria-current="page"><span class="sidebar-link-icon">📊</span><span>Grades</span></a>
+      <div class="sidebar-section-label">Account</div>
+      <a href="#" class="sidebar-link"><span class="sidebar-link-icon">⚙️</span><span>Settings</span></a>
+      <a href="index.html" class="sidebar-link" id="logoutBtn"><span class="sidebar-link-icon">🚪</span><span>Log Out</span></a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="sidebarAvatar">AJ</div>
+        <div><div class="sidebar-user-name" id="sidebarName">Alex Johnson</div><div class="sidebar-user-role">Student</div></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div><div class="page-title">My Grades</div><div class="page-subtitle">Performance overview across all courses</div></div>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙</button>
+        <div class="sidebar-avatar" style="cursor:default" id="topAvatar">AJ</div>
+      </div>
+    </header>
+
+    <main class="page-body">
+
+      <!-- Overview row -->
+      <div class="grid grid-4 gap-4 mb-6">
+        <div class="gpa-banner" style="grid-column:span 1" aria-label="GPA: 3.7">
+          <div class="gpa-value">3.7</div>
+          <div class="gpa-label">Semester GPA</div>
+        </div>
+        <div class="stat-card animate-slideUp">
+          <div><div class="stat-label">Graded</div><div class="stat-value" style="color:var(--success)">2</div><div class="stat-sub">Assignments</div></div>
+          <div class="stat-icon" style="background:var(--success-bg)">✅</div>
+        </div>
+        <div class="stat-card animate-slideUp" style="animation-delay:.05s">
+          <div><div class="stat-label">Pending Grade</div><div class="stat-value" style="color:var(--warning)">3</div><div class="stat-sub">Awaiting review</div></div>
+          <div class="stat-icon" style="background:var(--warning-bg)">⏳</div>
+        </div>
+        <div class="stat-card animate-slideUp" style="animation-delay:.1s">
+          <div><div class="stat-label">Average Score</div><div class="stat-value" style="color:var(--brand)">88%</div><div class="stat-sub">Across graded work</div></div>
+          <div class="stat-icon" style="background:var(--brand-light)">📈</div>
+        </div>
+      </div>
+
+      <!-- Grade table by course -->
+      <div class="card animate-slideUp">
+        <div class="card-header">
+          <span class="card-title">📋 Assignment Grades</span>
+          <div style="display:flex;gap:var(--sp-2)">
+            <select class="form-select" style="width:auto;padding:6px 12px;font-size:var(--text-sm)" id="courseFilter" aria-label="Filter by course">
+              <option value="all">All Courses</option>
+              <option value="cs301">CS 301</option>
+              <option value="math201">MATH 201</option>
+              <option value="eng102">ENG 102</option>
+              <option value="phys301">PHYS 301</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="gradeList" role="list" aria-label="Assignment grades"></div>
+      </div>
+
+      <!-- Legend -->
+      <div class="flex gap-4 mt-4" style="font-size:var(--text-xs);color:var(--text-secondary)">
+        <span>Grade scale: <strong style="color:var(--success)">A: 90–100</strong> &nbsp; <strong style="color:var(--brand)">B: 80–89</strong> &nbsp; <strong style="color:var(--warning)">C: 70–79</strong></span>
+        <span>Click any row to expand instructor feedback.</span>
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script>
+const user = Session.require("student");
+if (user) { document.getElementById("sidebarName").textContent = user.name; document.getElementById("sidebarAvatar").textContent = user.avatar; document.getElementById("topAvatar").textContent = user.avatar; }
+
+const t = localStorage.getItem("hci_theme") || "light";
+document.documentElement.setAttribute("data-theme", t);
+const tb = document.getElementById("themeToggle");
+tb.textContent = t === "dark" ? "☀️" : "🌙";
+tb.addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const nxt = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nxt);
+  localStorage.setItem("hci_theme", nxt);
+  tb.textContent = nxt === "dark" ? "☀️" : "🌙";
+});
+
+function gradeClass(g) { if (g >= 90) return "a"; if (g >= 80) return "b"; if (g >= 70) return "c"; return "pending"; }
+function gradeLabel(g) { if (g >= 90) return "A"; if (g >= 80) return "B"; if (g >= 70) return "C"; if (g >= 60) return "D"; return "F"; }
+
+function renderList(filter) {
+  const list = document.getElementById("gradeList");
+  list.innerHTML = "";
+  Object.values(ASSIGNMENTS)
+    .filter(a => filter === "all" || a.courseId === filter)
+    .forEach(a => {
+      const c = COURSES[a.courseId];
+      const graded = a.grade !== null;
+      const scoreClass = graded ? gradeClass(a.grade) : "pending";
+      const row = document.createElement("div");
+      row.className = "assignment-grade-row";
+      row.setAttribute("role","listitem");
+      row.setAttribute("tabindex","0");
+      row.setAttribute("aria-expanded","false");
+      row.setAttribute("aria-label",`${a.title}: ${graded ? a.grade + '/' + a.maxPoints : 'Pending'}`);
+      row.innerHTML = `
+        <div style="width:10px;height:10px;border-radius:50%;background:${c.color};flex-shrink:0" aria-hidden="true"></div>
+        <div>
+          <div style="font-weight:var(--fw-semi);font-size:var(--text-sm)">${a.title}</div>
+          <div style="font-size:var(--text-xs);color:var(--text-secondary)">${c.code} · Due ${formatDate(a.dueDate).split(",")[0]}</div>
+          ${a.feedback ? `<div class="feedback-panel" id="fb-${a.id}" aria-live="polite"><strong>Instructor Feedback:</strong> ${a.feedback}</div>` : ""}
+        </div>
+        <span class="badge ${a.submissionStatus === 'submitted' ? 'badge-success' : a.submissionStatus === 'late' ? 'badge-danger' : 'badge-neutral'}" style="margin-left:auto">
+          ${a.submissionStatus === 'submitted' ? '✓ Submitted' : a.submissionStatus === 'late' ? 'Overdue' : 'Pending'}
+        </span>
+        <div style="text-align:right;min-width:80px">
+          <div class="grade-score ${scoreClass}">${graded ? a.grade : "—"}</div>
+          <div style="font-size:var(--text-xs);color:var(--text-muted)">${graded ? `/ ${a.maxPoints} · ${gradeLabel(a.grade)}` : "Not graded"}</div>
+          ${graded ? `<div style="margin-top:4px"><div class="progress-wrap" style="height:4px"><div class="progress-bar" style="width:${(a.grade/a.maxPoints*100).toFixed(0)}%;background:${scoreClass==='a'?'var(--success)':scoreClass==='b'?'var(--brand)':'var(--warning)'}"></div></div></div>` : ""}
+        </div>
+        <span aria-hidden="true" style="color:var(--text-muted);font-size:var(--text-xs)" id="chevron-${a.id}">${a.feedback ? '▼' : ''}</span>
+      `;
+      // Expand feedback on click (Norman Feedback, Nielsen H1)
+      if (a.feedback) {
+        row.addEventListener("click", () => {
+          const fb = document.getElementById(`fb-${a.id}`);
+          const ch = document.getElementById(`chevron-${a.id}`);
+          const open = fb.classList.toggle("open");
+          row.setAttribute("aria-expanded", open);
+          ch.textContent = open ? "▲" : "▼";
+        });
+        row.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); row.click(); } });
+      }
+      list.appendChild(row);
+    });
+}
+
+renderList("all");
+document.getElementById("courseFilter").addEventListener("change", e => renderList(e.target.value));
+document.getElementById("logoutBtn").addEventListener("click", e => { e.preventDefault(); Session.clear(); window.location.href = "index.html"; });
+</script>
+</body>
+</html>

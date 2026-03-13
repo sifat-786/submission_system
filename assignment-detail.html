@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduSubmit — Assignment Submission</title>
+  <meta name="description" content="View assignment details and upload your submission."/>
+  <link rel="stylesheet" href="css/design-system.css"/>
+  <style>
+    /* Upload zone (Norman Affordance: looks droppable) */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--r-xl);
+      padding: var(--sp-12) var(--sp-8);
+      text-align: center;
+      transition: all var(--t-base);
+      cursor: pointer;
+      background: var(--bg-surface-2);
+      position: relative;
+    }
+    .upload-zone:hover, .upload-zone.dragover {
+      border-color: var(--brand);
+      background: var(--brand-light);
+    }
+    .upload-zone.dragover { transform: scale(1.01); }
+    .upload-zone:focus-within { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-glow); }
+
+    .upload-icon { font-size: 3rem; margin-bottom: var(--sp-4); display: block; line-height: 1; }
+    .upload-title { font-size: var(--text-lg); font-weight: var(--fw-bold); margin-bottom: var(--sp-2); }
+    .upload-sub   { color: var(--text-secondary); font-size: var(--text-sm); margin-bottom: var(--sp-5); }
+    .upload-input { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+
+    /* File preview */
+    .file-preview {
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: var(--sp-4);
+      display: flex; align-items: center; gap: var(--sp-4);
+      margin-top: var(--sp-4);
+    }
+    .file-icon { font-size: 2rem; }
+    .file-name { font-weight: var(--fw-semi); font-size: var(--text-sm); word-break: break-all; }
+    .file-size { font-size: var(--text-xs); color: var(--text-muted); }
+    .file-remove { margin-left: auto; flex-shrink: 0; }
+
+    /* Progress */
+    .upload-progress-wrap { margin-top: var(--sp-4); }
+    .progress-label { display: flex; justify-content: space-between; font-size: var(--text-xs); color: var(--text-secondary); margin-bottom: var(--sp-2); }
+    .progress-wrap { background: var(--border); border-radius: var(--r-full); height: 10px; }
+    .progress-bar  {
+      height: 100%; border-radius: var(--r-full);
+      background: linear-gradient(90deg, var(--brand), #a78bfa);
+      transition: width .3s ease;
+      position: relative; overflow: hidden;
+    }
+    .progress-bar::after {
+      content: "";
+      position: absolute; top: 0; left: -100%; right: 0; bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.4), transparent);
+      animation: shimmer 1.5s infinite;
+    }
+
+    /* Format tags */
+    .format-tags { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
+
+    /* Deadline countdown */
+    .deadline-box {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      border: 1px solid #fbbf24;
+      border-radius: var(--r-lg);
+      padding: var(--sp-4) var(--sp-5);
+    }
+    .deadline-box.urgent { background: linear-gradient(135deg, #fee2e2, #fecaca); border-color: var(--danger); }
+    .deadline-box.overdue { background: var(--danger-bg); border-color: var(--danger); }
+    [data-theme="dark"] .deadline-box { background: rgba(245,158,11,.15); border-color: rgba(245,158,11,.4); }
+    [data-theme="dark"] .deadline-box.urgent { background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.4); }
+
+    /* Error states (Nielsen H9) */
+    .error-state {
+      display: none;
+      background: var(--danger-bg);
+      border: 1px solid rgba(239,68,68,.3);
+      border-radius: var(--r-lg);
+      padding: var(--sp-4) var(--sp-5);
+    }
+    .error-state.show { display: flex; align-items: flex-start; gap: var(--sp-3); }
+    .error-state-icon { font-size: 1.3rem; flex-shrink: 0; }
+    .error-state-title { font-weight: var(--fw-semi); color: var(--danger-text); font-size: var(--text-sm); }
+    .error-state-msg   { color: var(--danger-text); font-size: var(--text-xs); margin-top: 2px; }
+
+    /* Assignment status-top bar */
+    .status-bar {
+      display: flex; align-items: center; gap: var(--sp-4);
+      padding: var(--sp-4) var(--sp-6);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-surface-2);
+      font-size: var(--text-sm);
+    }
+    .status-bar-step {
+      display: flex; align-items: center; gap: var(--sp-2);
+      color: var(--text-muted);
+    }
+    .status-bar-step.done  { color: var(--success); }
+    .status-bar-step.active { color: var(--brand); font-weight: var(--fw-semi); }
+    .status-bar-sep { color: var(--border); }
+    .step-num {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: var(--text-xs); font-weight: var(--fw-bold);
+      background: var(--border); color: var(--text-muted);
+    }
+    .status-bar-step.done  .step-num { background: var(--success);    color: #fff; }
+    .status-bar-step.active .step-num { background: var(--brand); color: #fff; }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon" aria-hidden="true">🎓</div>
+      <div><div class="sidebar-logo-text">EduSubmit</div><div class="sidebar-logo-sub">Student Portal</div></div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <a href="student-dashboard.html" class="sidebar-link"><span class="sidebar-link-icon">🏠</span><span>Dashboard</span></a>
+      <a href="student-dashboard.html#courses" class="sidebar-link"><span class="sidebar-link-icon">📚</span><span>My Courses</span></a>
+      <a href="assignment-detail.html" class="sidebar-link active" aria-current="page"><span class="sidebar-link-icon">📝</span><span>Assignments</span><span class="sidebar-badge">3</span></a>
+      <a href="grades.html" class="sidebar-link"><span class="sidebar-link-icon">📊</span><span>Grades</span></a>
+      <div class="sidebar-section-label">Account</div>
+      <a href="#" class="sidebar-link"><span class="sidebar-link-icon">⚙️</span><span>Settings</span></a>
+      <a href="index.html" class="sidebar-link" id="logoutBtn"><span class="sidebar-link-icon">🚪</span><span>Log Out</span></a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="sidebarAvatar" aria-hidden="true">AJ</div>
+        <div><div class="sidebar-user-name" id="sidebarName">Alex Johnson</div><div class="sidebar-user-role">Student</div></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="breadcrumb" aria-label="Breadcrumb">
+          <a href="student-dashboard.html">Dashboard</a>
+          <span class="breadcrumb-sep" aria-hidden="true">/</span>
+          <a href="#" id="breadCourse">CS 301</a>
+          <span class="breadcrumb-sep" aria-hidden="true">/</span>
+          <span id="breadAssignment">Assignment</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙</button>
+        <div class="sidebar-avatar" style="cursor:default" id="topAvatar">AJ</div>
+      </div>
+    </header>
+
+    <!-- Step progress bar (Nielsen H1: Visibility of System Status) -->
+    <div class="status-bar" role="progressbar" aria-label="Submission steps" aria-valuenow="2" aria-valuemax="3">
+      <div class="status-bar-step done" id="step1">
+        <div class="step-num">✓</div><span>Review</span>
+      </div>
+      <span class="status-bar-sep" aria-hidden="true">→</span>
+      <div class="status-bar-step active" id="step2">
+        <div class="step-num">2</div><span>Upload</span>
+      </div>
+      <span class="status-bar-sep" aria-hidden="true">→</span>
+      <div class="status-bar-step" id="step3">
+        <div class="step-num">3</div><span>Confirm</span>
+      </div>
+    </div>
+
+    <main class="page-body" id="mainContent">
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:var(--sp-6);align-items:start">
+
+        <!-- LEFT -->
+        <div class="flex-col gap-5">
+
+          <!-- Assignment Info -->
+          <div class="card animate-slideUp" id="assignmentCard">
+            <div class="card-header">
+              <div>
+                <div class="text-xs text-muted" id="courseLabel" style="text-transform:uppercase;letter-spacing:.06em;font-weight:600;margin-bottom:4px"></div>
+                <h1 class="card-title" id="assignmentTitle" style="font-size:var(--text-xl)"></h1>
+              </div>
+              <span class="badge" id="statusBadge">Loading…</span>
+            </div>
+            <div class="card-body">
+              <p id="assignmentDesc" style="font-size:var(--text-sm);color:var(--text-secondary);line-height:1.7;margin-bottom:var(--sp-5)"></p>
+
+              <div class="grid grid-3 gap-4">
+                <div>
+                  <div class="text-xs text-muted font-semi" style="text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Max Points</div>
+                  <div class="font-bold" id="maxPoints"></div>
+                </div>
+                <div>
+                  <div class="text-xs text-muted font-semi" style="text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Max File Size</div>
+                  <div class="font-bold" id="maxFileSize"></div>
+                </div>
+                <div>
+                  <div class="text-xs text-muted font-semi" style="text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px">Allowed Formats</div>
+                  <div class="format-tags" id="formatTags"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Error States (Nielsen H9, Norman Feedback) -->
+          <div class="error-state" id="errFileMissing">
+            <div class="error-state-icon">📁</div>
+            <div><div class="error-state-title">No file selected</div><div class="error-state-msg">Please choose a file before submitting.</div></div>
+          </div>
+          <div class="error-state" id="errFormat">
+            <div class="error-state-icon">🚫</div>
+            <div>
+              <div class="error-state-title">Unsupported file format</div>
+              <div class="error-state-msg" id="errFormatMsg">This file type is not accepted for this assignment.</div>
+            </div>
+          </div>
+          <div class="error-state" id="errSize">
+            <div class="error-state-icon">⚖️</div>
+            <div>
+              <div class="error-state-title">File too large</div>
+              <div class="error-state-msg" id="errSizeMsg">Please compress your file and try again.</div>
+            </div>
+          </div>
+          <div class="error-state" id="errDeadline">
+            <div class="error-state-icon">⏰</div>
+            <div>
+              <div class="error-state-title">Deadline has passed</div>
+              <div class="error-state-msg">The submission deadline has passed. Contact your instructor.</div>
+            </div>
+          </div>
+          <div class="error-state" id="errNetwork" style="display:none">
+            <div class="error-state-icon">📡</div>
+            <div>
+              <div class="error-state-title">Connection interrupted</div>
+              <div class="error-state-msg">Your upload was interrupted. Please check your internet connection and try again.</div>
+            </div>
+          </div>
+
+          <!-- Upload Zone (Norman Affordance/Signifiers) -->
+          <div class="card animate-slideUp" id="uploadCard" style="animation-delay:.1s">
+            <div class="card-header">
+              <span class="card-title">📤 Upload Your Submission</span>
+              <span class="badge badge-info" aria-live="polite" id="uploadStatusBadge">Ready</span>
+            </div>
+            <div class="card-body">
+              <!-- Already submitted? -->
+              <div id="alreadySubmitted" class="alert alert-success" style="display:none;margin-bottom:var(--sp-4)">
+                <span class="alert-icon">✅</span>
+                <div><div class="alert-title">Already submitted</div><div id="submittedAt"></div></div>
+              </div>
+
+              <div class="upload-zone" id="uploadZone" role="button" tabindex="0"
+                   aria-label="Drop files here or click to choose a file"
+                   aria-describedby="uploadInstructions">
+                <input type="file" id="fileInput" class="upload-input" aria-hidden="true" />
+                <span class="upload-icon" aria-hidden="true">📂</span>
+                <div class="upload-title">Drop your file here</div>
+                <div class="upload-sub" id="uploadInstructions">or click anywhere to browse</div>
+                <div class="format-tags" id="uploadFormatHint" style="justify-content:center;margin-top:var(--sp-3)"></div>
+              </div>
+
+              <!-- File Preview (Norman Feedback) -->
+              <div id="filePreview" style="display:none">
+                <div class="file-preview">
+                  <span class="file-icon" id="fileTypeIcon" aria-hidden="true">📄</span>
+                  <div style="flex:1;min-width:0">
+                    <div class="file-name" id="fileName"></div>
+                    <div class="file-size" id="fileSize"></div>
+                  </div>
+                  <button class="btn btn-ghost btn-sm file-remove" id="removeFile" aria-label="Remove selected file">✕</button>
+                </div>
+              </div>
+
+              <!-- Upload Progress (Nielsen H1: Visibility) -->
+              <div class="upload-progress-wrap" id="progressWrap" style="display:none" aria-live="polite" aria-label="Upload progress">
+                <div class="progress-label">
+                  <span>Uploading…</span>
+                  <span id="progressPct">0%</span>
+                </div>
+                <div class="progress-wrap">
+                  <div class="progress-bar" id="progressBar" style="width:0%" role="progressbar"
+                       aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+
+              <!-- Submit Button (Fitts' Law: large, primary) -->
+              <div style="margin-top:var(--sp-6);display:flex;gap:var(--sp-3);align-items:center">
+                <button class="btn btn-primary btn-xl" id="submitBtn" style="flex:1" aria-describedby="submitHint">
+                  <span id="submitBtnIcon">📤</span>
+                  <span id="submitBtnText">Submit Assignment</span>
+                </button>
+                <button class="btn btn-secondary btn-xl" id="saveDraftBtn" aria-label="Save draft">Save Draft</button>
+              </div>
+              <div id="submitHint" class="form-hint text-xs" style="margin-top:var(--sp-2);text-align:center">
+                You'll receive a confirmation with your Submission ID after uploading.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT SIDEBAR -->
+        <div class="flex-col gap-4">
+          <!-- Deadline Box (Norman Signifiers) -->
+          <div class="deadline-box animate-slideUp" id="deadlineBox" role="status" aria-live="polite">
+            <div class="text-xs font-semi" style="text-transform:uppercase;letter-spacing:.06em;opacity:.7;margin-bottom:4px">📅 Due Date</div>
+            <div style="font-size:var(--text-xl);font-weight:var(--fw-black)" id="dueDateFmt"></div>
+            <div style="font-size:var(--text-sm);margin-top:4px;font-weight:var(--fw-semi)" id="dueCountdown"></div>
+          </div>
+
+          <!-- Submission checklist -->
+          <div class="card animate-slideUp" style="animation-delay:.05s">
+            <div class="card-header"><span class="card-title">✅ Submission Checklist</span></div>
+            <div class="card-body flex-col gap-3" style="font-size:var(--text-sm)">
+              <div id="check1" class="flex items-center gap-3" style="color:var(--text-secondary)"><span>⬜</span><span>File selected</span></div>
+              <div id="check2" class="flex items-center gap-3" style="color:var(--text-secondary)"><span>⬜</span><span>Correct format</span></div>
+              <div id="check3" class="flex items-center gap-3" style="color:var(--text-secondary)"><span>⬜</span><span>File size OK</span></div>
+              <div id="check4" class="flex items-center gap-3" style="color:var(--text-secondary)"><span>🕐</span><span>Within deadline</span></div>
+            </div>
+          </div>
+
+          <!-- Help (Nielsen H10) -->
+          <div class="card animate-slideUp" style="animation-delay:.1s">
+            <div class="card-header"><span class="card-title">💡 Tips</span></div>
+            <div class="card-body flex-col gap-3">
+              <div class="text-xs text-secondary">
+                <strong>Large files:</strong> Compress images and avoid embedded videos. Use ZIP for multiple files.
+              </div>
+              <div class="text-xs text-secondary">
+                <strong>Format:</strong> Only listed formats are accepted. Rename if needed.
+              </div>
+              <div class="text-xs text-secondary">
+                <strong>Confirmation:</strong> Always wait for your Submission ID before closing the tab.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Confirm Submit Modal (Norman Feedback + Nielsen H3) -->
+<div class="modal-backdrop" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal animate-slideUp">
+    <div class="modal-header">
+      <span class="modal-title" id="modalTitle">⚠️ Confirm Submission</span>
+      <button class="btn btn-ghost btn-icon" id="closeModal" aria-label="Close dialog">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:var(--text-sm);color:var(--text-secondary);margin-bottom:var(--sp-4)">
+        You are about to submit your assignment. Please verify the details below before confirming.
+      </p>
+      <div class="card" style="background:var(--bg-surface-2)">
+        <div class="card-body flex-col gap-3">
+          <div class="flex justify-between text-sm"><span class="text-muted">Assignment</span><span class="font-semi" id="confirmAssignment"></span></div>
+          <div class="flex justify-between text-sm"><span class="text-muted">File</span><span class="font-semi" id="confirmFile"></span></div>
+          <div class="flex justify-between text-sm"><span class="text-muted">Size</span><span id="confirmSize"></span></div>
+        </div>
+      </div>
+      <div class="alert alert-warning mt-4">
+        <span class="alert-icon">⚠️</span>
+        <div><div class="alert-title">This action cannot be undone</div>Once submitted, you cannot edit this submission (unless resubmission is allowed).</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-md" id="cancelModal">Cancel</button>
+      <button class="btn btn-primary btn-md" id="confirmSubmit">✅ Confirm &amp; Submit</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script>
+const user = Session.require("student");
+if (user) { document.getElementById("sidebarName").textContent = user.name; document.getElementById("sidebarAvatar").textContent = user.avatar; document.getElementById("topAvatar").textContent = user.avatar; }
+
+// Theme
+const t = localStorage.getItem("hci_theme") || "light";
+document.documentElement.setAttribute("data-theme", t);
+const tb = document.getElementById("themeToggle");
+tb.textContent = t === "dark" ? "☀️" : "🌙";
+tb.addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const nxt = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nxt);
+  localStorage.setItem("hci_theme", nxt);
+  tb.textContent = nxt === "dark" ? "☀️" : "🌙";
+});
+
+// Load assignment
+const params = new URLSearchParams(location.search);
+const assignId = params.get("assignment") || "a002";
+const assignment = ASSIGNMENTS[assignId];
+const course = COURSES[assignment.courseId];
+
+// Populate
+document.getElementById("breadCourse").textContent = course.code;
+document.getElementById("breadAssignment").textContent = assignment.title;
+document.getElementById("courseLabel").textContent = `${course.code} — ${course.title}`;
+document.getElementById("assignmentTitle").textContent = assignment.title;
+document.getElementById("assignmentDesc").textContent = assignment.description;
+document.getElementById("maxPoints").textContent = `${assignment.maxPoints} pts`;
+document.getElementById("maxFileSize").textContent = `${assignment.maxFileSize} MB`;
+document.title = `EduSubmit — ${assignment.title}`;
+
+// Format tags
+const addTags = (el) => { el.innerHTML = ""; assignment.allowedFormats.forEach(f => { el.innerHTML += `<span class="tag">${f}</span>`; }); };
+addTags(document.getElementById("formatTags"));
+addTags(document.getElementById("uploadFormatHint"));
+
+// Status badge
+const statusMap = { submitted:"badge-success", pending:"badge-info", late:"badge-danger" };
+const statusLbl = { submitted:"Submitted ✓", pending:"Pending", late:"Overdue" };
+const badge = document.getElementById("statusBadge");
+badge.className = `badge ${statusMap[assignment.submissionStatus]}`;
+badge.textContent = statusLbl[assignment.submissionStatus];
+
+// Deadline
+const due = timeUntil(assignment.dueDate);
+document.getElementById("dueDateFmt").textContent = formatDate(assignment.dueDate);
+document.getElementById("dueCountdown").textContent = due.label;
+const dBox = document.getElementById("deadlineBox");
+if (due.overdue) dBox.classList.add("overdue");
+else if (due.urgent) dBox.classList.add("urgent");
+
+// Deadline check 4
+if (!due.overdue) setCheck("check4", true, "Within deadline");
+else setCheck("check4", false, "Deadline passed", true);
+
+// Already submitted?
+if (assignment.submissionStatus === "submitted") {
+  document.getElementById("alreadySubmitted").style.display = "flex";
+  document.getElementById("submittedAt").textContent = `Submitted on ${formatDate(assignment.submittedAt)}  •  ID: ${assignment.submissionId}`;
+}
+// Overdue error
+if (due.overdue && assignment.submissionStatus !== "submitted") {
+  showError("errDeadline");
+  document.getElementById("submitBtn").disabled = true;
+}
+
+// ── File Upload Logic ──────────────────────────────────────────────────────
+let selectedFile = null;
+const zone = document.getElementById("uploadZone");
+const input = document.getElementById("fileInput");
+
+// Drag & drop (Norman Affordance)
+zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("dragover"); });
+zone.addEventListener("dragleave", () => zone.classList.remove("dragover"));
+zone.addEventListener("drop", e => {
+  e.preventDefault(); zone.classList.remove("dragover");
+  if (e.dataTransfer.files[0]) processFile(e.dataTransfer.files[0]);
+});
+zone.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } });
+input.addEventListener("change", () => { if (input.files[0]) processFile(input.files[0]); });
+
+function processFile(file) {
+  hideAllErrors();
+  const ext = "." + file.name.split(".").pop().toLowerCase();
+  // Format validation (Nielsen H5 — Error Prevention)
+  if (!assignment.allowedFormats.includes(ext)) {
+    showError("errFormat");
+    document.getElementById("errFormatMsg").textContent = `"${ext}" is not accepted. Allowed: ${assignment.allowedFormats.join(", ")}`;
+    setCheck("check2", false, "Invalid format", true);
+    return;
+  }
+  // Size validation
+  const sizeMB = file.size / 1048576;
+  if (sizeMB > assignment.maxFileSize) {
+    showError("errSize");
+    document.getElementById("errSizeMsg").textContent = `File is ${sizeMB.toFixed(1)} MB. Maximum allowed is ${assignment.maxFileSize} MB.`;
+    setCheck("check3", false, "File too large", true);
+    return;
+  }
+  selectedFile = file;
+  setCheck("check1", true, "File selected");
+  setCheck("check2", true, "Correct format");
+  setCheck("check3", true, "File size OK");
+  showPreview(file, sizeMB);
+}
+
+function showPreview(file, sizeMB) {
+  const icons = { pdf:"📕", zip:"📦", py:"🐍", java:"☕", docx:"📘", doc:"📘", default:"📄" };
+  const ext = file.name.split(".").pop().toLowerCase();
+  document.getElementById("fileTypeIcon").textContent = icons[ext] || icons.default;
+  document.getElementById("fileName").textContent = file.name;
+  document.getElementById("fileSize").textContent = `${sizeMB.toFixed(2)} MB`;
+  document.getElementById("uploadZone").style.display = "none";
+  document.getElementById("filePreview").style.display = "block";
+  document.getElementById("uploadStatusBadge").className = "badge badge-success";
+  document.getElementById("uploadStatusBadge").textContent = "File ready ✓";
+}
+
+document.getElementById("removeFile").addEventListener("click", () => {
+  selectedFile = null; input.value = "";
+  document.getElementById("uploadZone").style.display = "block";
+  document.getElementById("filePreview").style.display = "none";
+  document.getElementById("uploadStatusBadge").className = "badge badge-info";
+  document.getElementById("uploadStatusBadge").textContent = "Ready";
+  setCheck("check1", false, "File selected");
+  setCheck("check2", false, "Correct format");
+  setCheck("check3", false, "File size OK");
+});
+
+// ── Submit ────────────────────────────────────────────────────────────────
+document.getElementById("submitBtn").addEventListener("click", () => {
+  hideAllErrors();
+  if (!selectedFile) { showError("errFileMissing"); return; }
+  // Populate modal
+  document.getElementById("confirmAssignment").textContent = assignment.title;
+  document.getElementById("confirmFile").textContent = selectedFile.name;
+  document.getElementById("confirmSize").textContent = `${(selectedFile.size/1048576).toFixed(2)} MB`;
+  document.getElementById("confirmModal").classList.add("open");
+  document.getElementById("confirmSubmit").focus();
+});
+
+document.getElementById("closeModal").addEventListener("click", closeModal);
+document.getElementById("cancelModal").addEventListener("click", closeModal);
+document.getElementById("confirmModal").addEventListener("click", e => { if (e.target === e.currentTarget) closeModal(); });
+function closeModal() { document.getElementById("confirmModal").classList.remove("open"); document.getElementById("submitBtn").focus(); }
+
+document.getElementById("confirmSubmit").addEventListener("click", async () => {
+  closeModal();
+  // Show progress (Nielsen H1)
+  document.getElementById("progressWrap").style.display = "block";
+  document.getElementById("submitBtn").disabled = true;
+  document.getElementById("submitBtnText").textContent = "Uploading…";
+  document.getElementById("submitBtnIcon").textContent = "⟳";
+  document.getElementById("submitBtn").querySelector("#submitBtnIcon").classList.add("animate-pulse");
+  document.getElementById("uploadStatusBadge").className = "badge badge-warning animate-pulse";
+  document.getElementById("uploadStatusBadge").textContent = "Uploading…";
+
+  // Simulate progress
+  let pct = 0;
+  const bar = document.getElementById("progressBar");
+  const pctEl = document.getElementById("progressPct");
+  const iv = setInterval(() => {
+    pct += Math.random() * 18 + 5;
+    if (pct >= 100) { pct = 100; clearInterval(iv); redirectConfirm(); }
+    bar.style.width = pct + "%";
+    bar.setAttribute("aria-valuenow", Math.floor(pct));
+    pctEl.textContent = Math.floor(pct) + "%";
+  }, 250);
+});
+
+function redirectConfirm() {
+  const sid = generateId();
+  sessionStorage.setItem("lastSubmission", JSON.stringify({
+    assignmentId: assignment.id, assignmentTitle: assignment.title,
+    courseCode: course.code, courseTitle: course.title,
+    fileName: selectedFile.name, fileSize: (selectedFile.size/1048576).toFixed(2),
+    submittedAt: new Date().toISOString(), submissionId: sid, grade: null
+  }));
+  window.location.href = "confirmation.html";
+}
+
+function showError(id) { document.getElementById(id).classList.add("show"); document.getElementById(id).style.display = "flex"; }
+function hideAllErrors() { ["errFileMissing","errFormat","errSize","errDeadline","errNetwork"].forEach(id => { const el = document.getElementById(id); if (el) { el.classList.remove("show"); el.style.display = "none"; } }); }
+function setCheck(id, ok, label, danger=false) {
+  const el = document.getElementById(id); if (!el) return;
+  const icon = ok ? "✅" : (danger ? "❌" : "⬜");
+  el.innerHTML = `<span>${icon}</span><span style="color:${ok ? "var(--success)" : danger ? "var(--danger)" : "var(--text-secondary)"}">${label}</span>`;
+}
+
+document.getElementById("saveDraftBtn").addEventListener("click", () => { alert("Draft saved! You can return to complete your submission before the deadline."); });
+document.getElementById("logoutBtn").addEventListener("click", e => { e.preventDefault(); Session.clear(); window.location.href = "index.html"; });
+</script>
+</body>
+</html>

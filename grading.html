@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduSubmit — Grading Interface</title>
+  <link rel="stylesheet" href="css/design-system.css"/>
+  <style>
+    .grading-layout { display: grid; grid-template-columns: 280px 1fr 320px; gap: var(--sp-5); align-items: start; }
+
+    /* Student list panel */
+    .student-list-item {
+      display: flex; align-items: center; gap: var(--sp-3);
+      padding: var(--sp-3) var(--sp-4);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer; text-decoration: none; color: inherit;
+      transition: background var(--t-fast);
+      border-left: 3px solid transparent;
+    }
+    .student-list-item:hover   { background: var(--bg-hover); }
+    .student-list-item.active  { background: var(--brand-light); border-left-color: var(--brand); }
+    .student-list-item:last-child { border-bottom: none; }
+    .student-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--brand), #a78bfa); display: flex; align-items: center; justify-content: center; color: #fff; font-size: var(--text-xs); font-weight: var(--fw-bold); flex-shrink: 0; }
+
+    /* Submission viewer */
+    .submission-viewer {
+      background: var(--bg-surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      min-height: 400px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: var(--sp-8);
+    }
+    .viewer-icon { font-size: 4rem; margin-bottom: var(--sp-4); }
+
+    /* Grade input */
+    .grade-slider input[type=range] {
+      width: 100%; accent-color: var(--brand);
+      height: 6px; border-radius: var(--r-full);
+    }
+    .grade-display {
+      font-size: var(--text-4xl); font-weight: var(--fw-black);
+      text-align: center; color: var(--brand);
+      line-height: 1; margin: var(--sp-4) 0;
+    }
+    .grade-letter {
+      text-align: center; font-size: var(--text-lg); font-weight: var(--fw-bold);
+      padding: 4px 16px; border-radius: var(--r-full);
+      margin: 0 auto var(--sp-4); display: inline-block;
+    }
+
+    /* Rubric */
+    .rubric-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: var(--sp-3) 0; border-bottom: 1px solid var(--border);
+      font-size: var(--text-sm);
+    }
+    .rubric-row:last-child { border-bottom: none; }
+    .rubric-pts input {
+      width: 60px; padding: 4px 8px; font-size: var(--text-sm);
+      border: 1px solid var(--border); border-radius: var(--r-sm);
+      background: var(--bg-surface); color: var(--text-primary);
+      text-align: center;
+    }
+
+    /* Navigation arrows */
+    .sub-nav { display: flex; align-items: center; gap: var(--sp-3); }
+    .sub-nav-info { font-size: var(--text-sm); color: var(--text-secondary); }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">🎓</div>
+      <div><div class="sidebar-logo-text">EduSubmit</div><div class="sidebar-logo-sub">Instructor Portal</div></div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <a href="instructor-dashboard.html" class="sidebar-link"><span class="sidebar-link-icon">🏠</span><span>Dashboard</span></a>
+      <a href="grading.html" class="sidebar-link active" aria-current="page"><span class="sidebar-link-icon">✏️</span><span>Grading</span></a>
+      <div class="sidebar-section-label">Account</div>
+      <a href="index.html" class="sidebar-link" id="logoutBtn"><span class="sidebar-link-icon">🚪</span><span>Log Out</span></a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="sidebarAvatar">SC</div>
+        <div><div class="sidebar-user-name" id="sidebarName">Dr. Sarah Chen</div><div class="sidebar-user-role">Instructor</div></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="breadcrumb">
+          <a href="instructor-dashboard.html">Dashboard</a>
+          <span class="breadcrumb-sep">/ </span>
+          <span>Graph Traversal Algorithms — Grading</span>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <!-- Navigation between students (Nielsen H6: flexibility) -->
+        <div class="sub-nav">
+          <button class="btn btn-secondary btn-sm" id="prevSub" aria-label="Previous student">← Prev</button>
+          <span class="sub-nav-info" id="subNavInfo" aria-live="polite">1 of 7</span>
+          <button class="btn btn-secondary btn-sm" id="nextSub" aria-label="Next student">Next →</button>
+        </div>
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙</button>
+      </div>
+    </header>
+
+    <main class="page-body">
+      <div class="grading-layout">
+
+        <!-- COLUMN 1: Student list -->
+        <div class="card" style="position:sticky;top:80px">
+          <div class="card-header"><span class="card-title">Students</span><span class="badge badge-info" id="gradedCount">3/7 graded</span></div>
+          <div id="studentList" role="list" aria-label="Student submissions"></div>
+        </div>
+
+        <!-- COLUMN 2: Submission viewer -->
+        <div class="flex-col gap-4">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title" id="viewerName">Emma Wilson</div>
+                <div class="text-xs text-muted" id="viewerMeta">Submitted Mar 11, 2026 · 3.2 MB</div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn btn-secondary btn-sm" aria-label="Download submission">⬇️ Download</button>
+                <span class="badge" id="viewerStatus">Graded</span>
+              </div>
+            </div>
+            <div class="submission-viewer" aria-label="Submission file preview">
+              <div class="viewer-icon" aria-hidden="true">📦</div>
+              <div style="font-weight:var(--fw-semi);margin-bottom:8px" id="viewerFileName">emma_bfs_dfs.zip</div>
+              <div class="text-xs text-muted mb-4">ZIP archive · 3.2 MB · Submitted on time</div>
+              <button class="btn btn-primary btn-md" onclick="alert('In a production system, this would open the file in a secure sandboxed viewer.')">
+                📂 Open File Viewer
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- COLUMN 3: Grade form -->
+        <div class="flex-col gap-4" style="position:sticky;top:80px">
+          <div class="card">
+            <div class="card-header"><span class="card-title">✏️ Grade This Submission</span></div>
+            <div class="card-body">
+
+              <!-- Grade slider (Fitts' Law: easy input) -->
+              <div class="grade-display" id="gradeDisplay" aria-live="polite" aria-label="Current grade">94</div>
+              <div style="text-align:center;margin-bottom:var(--sp-3)">
+                <span class="grade-letter" id="gradeLetter" style="background:var(--success-bg);color:var(--success-text)">A</span>
+              </div>
+              <div class="grade-slider form-group">
+                <label class="form-label" for="gradeSlider">Score (out of 100)</label>
+                <input type="range" id="gradeSlider" min="0" max="100" value="94"
+                       aria-label="Grade slider, 0 to 100" aria-valuenow="94"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="gradeInput">Or enter manually</label>
+                <input type="number" class="form-input" id="gradeInput" min="0" max="100" value="94" aria-label="Enter grade manually"/>
+              </div>
+
+              <div class="divider"></div>
+
+              <!-- Rubric (Hick's Law: structured categories) -->
+              <div class="form-group">
+                <div class="form-label">Rubric Breakdown</div>
+                <div id="rubricRows">
+                  <div class="rubric-row"><span>BFS Correctness</span><div class="rubric-pts"><input type="number" value="25" max="25" min="0" aria-label="BFS correctness score out of 25"/> <span class="text-xs text-muted">/ 25</span></div></div>
+                  <div class="rubric-row"><span>DFS Correctness</span><div class="rubric-pts"><input type="number" value="25" max="25" min="0" aria-label="DFS correctness score out of 25"/> <span class="text-xs text-muted">/ 25</span></div></div>
+                  <div class="rubric-row"><span>Complexity Analysis</span><div class="rubric-pts"><input type="number" value="20" max="25" min="0" aria-label="Complexity analysis score out of 25"/> <span class="text-xs text-muted">/ 25</span></div></div>
+                  <div class="rubric-row"><span>Test Cases</span><div class="rubric-pts"><input type="number" value="24" max="25" min="0" aria-label="Test cases score out of 25"/> <span class="text-xs text-muted">/ 25</span></div></div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="feedbackInput">Instructor Feedback</label>
+                <textarea class="form-textarea" id="feedbackInput" rows="4"
+                  placeholder="Provide constructive feedback for the student…"
+                  aria-label="Instructor feedback for student"
+                  aria-describedby="feedbackHint">Outstanding work on the BFS/DFS implementation. Minor edge cases in disconnected graphs.</textarea>
+                <div class="form-hint" id="feedbackHint">Students will see this feedback when grades are published.</div>
+              </div>
+
+              <div class="flex-col gap-3">
+                <button class="btn btn-primary btn-lg w-full" id="saveGradeBtn" aria-label="Save grade and feedback">
+                  💾 Save Grade
+                </button>
+                <button class="btn btn-success btn-md w-full" id="publishBtn"
+                  style="background:var(--success);color:#fff"
+                  aria-label="Publish grade to student">
+                  📢 Publish to Student
+                </button>
+                <button class="btn btn-secondary btn-sm w-full" id="nextStudentBtn" aria-label="Go to next student">
+                  Next Student →
+                </button>
+              </div>
+
+              <!-- Saved confirmation -->
+              <div class="alert alert-success mt-4" id="savedAlert" role="status" aria-live="polite" style="display:none">
+                <span class="alert-icon">✅</span>
+                <div><div class="alert-title">Grade Saved</div>Student will be notified when published.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script>
+const user = Session.require("instructor");
+if (user) { document.getElementById("sidebarName").textContent = user.name; document.getElementById("sidebarAvatar").textContent = user.avatar; }
+
+const t = localStorage.getItem("hci_theme") || "light";
+document.documentElement.setAttribute("data-theme", t);
+const tb = document.getElementById("themeToggle");
+tb.textContent = t === "dark" ? "☀️" : "🌙";
+tb.addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const nxt = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nxt);
+  localStorage.setItem("hci_theme", nxt);
+  tb.textContent = nxt === "dark" ? "☀️" : "🌙";
+});
+
+// Student list
+let currentIdx = 0;
+const list = document.getElementById("studentList");
+SUBMISSIONS.forEach((s, i) => {
+  const initials = s.student.split(" ").map(x=>x[0]).join("");
+  const el = document.createElement("a");
+  el.className = `student-list-item ${i === 0 ? "active" : ""}`;
+  el.href = "#"; el.setAttribute("role","listitem"); el.setAttribute("tabindex","0");
+  el.setAttribute("aria-label", `${s.student}, ${s.status}`);
+  el.innerHTML = `
+    <div class="student-avatar" aria-hidden="true">${initials}</div>
+    <div style="flex:1">
+      <div style="font-size:var(--text-sm);font-weight:var(--fw-semi)">${s.student}</div>
+      <div style="font-size:var(--text-xs);color:var(--text-muted)">${s.status === "graded" ? s.grade+"/100 ✓" : s.submittedAt ? "Pending" : "Missing"}</div>
+    </div>
+    <span class="badge ${s.status==="graded"?"badge-success":s.status==="missing"?"badge-danger":"badge-neutral"}" style="font-size:.6rem">${s.status}</span>`;
+  el.addEventListener("click", e => { e.preventDefault(); selectStudent(i); });
+  el.addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); selectStudent(i); } });
+  list.appendChild(el);
+});
+
+function selectStudent(i) {
+  currentIdx = i;
+  const s = SUBMISSIONS[i];
+  list.querySelectorAll(".student-list-item").forEach((el, idx) => el.classList.toggle("active", idx === i));
+  document.getElementById("viewerName").textContent = s.student;
+  document.getElementById("viewerMeta").textContent = s.submittedAt ? `Submitted ${formatDate(s.submittedAt).split(",")[0]} · ${s.fileSize}` : "No submission";
+  document.getElementById("viewerFileName").textContent = s.fileName || "—";
+  document.getElementById("viewerStatus").className = `badge ${s.status==="graded"?"badge-success":s.status==="missing"?"badge-danger":"badge-info"}`;
+  document.getElementById("viewerStatus").textContent = s.status;
+  const g = s.grade ?? 80;
+  document.getElementById("gradeSlider").value = g;
+  document.getElementById("gradeInput").value = g;
+  document.getElementById("feedbackInput").value = s.feedback || "";
+  updateGradeDisplay(g);
+  document.getElementById("subNavInfo").textContent = `${i+1} of ${SUBMISSIONS.length}`;
+  document.getElementById("savedAlert").style.display = "none";
+}
+
+// Grade sync — slider ↔ input
+function updateGradeDisplay(g) {
+  g = Math.max(0, Math.min(100, +g));
+  document.getElementById("gradeDisplay").textContent = g;
+  const letter = g >= 90 ? "A" : g >= 80 ? "B" : g >= 70 ? "C" : g >= 60 ? "D" : "F";
+  const colors = { A:"var(--success-bg);color:var(--success-text)", B:"var(--info-bg);color:var(--info-text)", C:"var(--warning-bg);color:var(--warning-text)", D:"var(--danger-bg);color:var(--danger-text)", F:"var(--danger-bg);color:var(--danger-text)" };
+  const lel = document.getElementById("gradeLetter");
+  lel.textContent = letter;
+  lel.style.cssText = `background:${colors[letter]};display:inline-block;text-align:center`;
+}
+document.getElementById("gradeSlider").addEventListener("input", e => { document.getElementById("gradeInput").value = e.target.value; updateGradeDisplay(e.target.value); });
+document.getElementById("gradeInput").addEventListener("input", e => { document.getElementById("gradeSlider").value = e.target.value; updateGradeDisplay(e.target.value); });
+
+// Save grade
+document.getElementById("saveGradeBtn").addEventListener("click", () => {
+  document.getElementById("savedAlert").style.display = "flex";
+  setTimeout(() => document.getElementById("savedAlert").style.display = "none", 3000);
+});
+
+// Publish
+document.getElementById("publishBtn").addEventListener("click", () => {
+  alert(`Grade published! ${SUBMISSIONS[currentIdx].student} will receive a notification with their grade and feedback.`);
+});
+
+// Navigation
+document.getElementById("prevSub").addEventListener("click", () => { if (currentIdx > 0) selectStudent(currentIdx - 1); });
+document.getElementById("nextSub").addEventListener("click", () => { if (currentIdx < SUBMISSIONS.length - 1) selectStudent(currentIdx + 1); });
+document.getElementById("nextStudentBtn").addEventListener("click", () => { if (currentIdx < SUBMISSIONS.length - 1) selectStudent(currentIdx + 1); });
+
+selectStudent(0);
+document.getElementById("logoutBtn").addEventListener("click", e => { e.preventDefault(); Session.clear(); window.location.href = "index.html"; });
+</script>
+</body>
+</html>

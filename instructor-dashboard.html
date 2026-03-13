@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EduSubmit — Instructor Dashboard</title>
+  <link rel="stylesheet" href="css/design-system.css"/>
+  <style>
+    .sub-row { cursor: pointer; }
+    .sub-row:hover td { background: var(--bg-hover); }
+
+    .course-pill {
+      display: inline-flex; align-items: center; gap: var(--sp-2);
+      background: var(--bg-surface-2); border: 1px solid var(--border);
+      border-radius: var(--r-lg); padding: var(--sp-4) var(--sp-5);
+      cursor: pointer; text-decoration: none; color: inherit;
+      transition: all var(--t-fast);
+    }
+    .course-pill:hover { border-color: var(--brand); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .course-accent { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+    .workload-bar { width: 100%; height: 4px; border-radius: var(--r-full); background: var(--border); margin-top: 4px; }
+    .workload-fill { height: 100%; border-radius: var(--r-full); }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">🎓</div>
+      <div><div class="sidebar-logo-text">EduSubmit</div><div class="sidebar-logo-sub">Instructor Portal</div></div>
+    </div>
+    <div class="sidebar-nav">
+      <div class="sidebar-section-label">Main</div>
+      <a href="instructor-dashboard.html" class="sidebar-link active" aria-current="page"><span class="sidebar-link-icon">🏠</span><span>Dashboard</span></a>
+      <a href="grading.html" class="sidebar-link"><span class="sidebar-link-icon">📋</span><span>Submissions</span><span class="sidebar-badge">6</span></a>
+      <a href="grading.html" class="sidebar-link"><span class="sidebar-link-icon">✏️</span><span>Grading</span></a>
+      <div class="sidebar-section-label">Account</div>
+      <a href="#" class="sidebar-link"><span class="sidebar-link-icon">⚙️</span><span>Settings</span></a>
+      <a href="index.html" class="sidebar-link" id="logoutBtn"><span class="sidebar-link-icon">🚪</span><span>Log Out</span></a>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar" id="sidebarAvatar">SC</div>
+        <div><div class="sidebar-user-name" id="sidebarName">Dr. Sarah Chen</div><div class="sidebar-user-role">Instructor</div></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="topbar-left">
+        <div>
+          <div class="page-title">Instructor Dashboard</div>
+          <div class="page-subtitle" id="welcomeMsg">Welcome back, Dr. Chen</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">🌙</button>
+        <div class="sidebar-avatar" style="cursor:default" id="topAvatar">SC</div>
+      </div>
+    </header>
+
+    <main class="page-body">
+
+      <!-- Stats -->
+      <div class="grid grid-4 gap-4 mb-6">
+        <div class="stat-card animate-slideUp">
+          <div><div class="stat-label">Total Submissions</div><div class="stat-value">8</div><div class="stat-sub">For active assignments</div></div>
+          <div class="stat-icon" style="background:var(--brand-light)">📥</div>
+        </div>
+        <div class="stat-card animate-slideUp" style="animation-delay:.05s">
+          <div><div class="stat-label">Pending Grading</div><div class="stat-value" style="color:var(--warning)">5</div><div class="stat-sub">Need attention</div></div>
+          <div class="stat-icon" style="background:var(--warning-bg)">⏳</div>
+        </div>
+        <div class="stat-card animate-slideUp" style="animation-delay:.1s">
+          <div><div class="stat-label">Graded</div><div class="stat-value" style="color:var(--success)">3</div><div class="stat-sub">Feedback given</div></div>
+          <div class="stat-icon" style="background:var(--success-bg)">✅</div>
+        </div>
+        <div class="stat-card animate-slideUp" style="animation-delay:.15s">
+          <div><div class="stat-label">Average Score</div><div class="stat-value" style="color:var(--brand)">85.7</div><div class="stat-sub">Across graded submissions</div></div>
+          <div class="stat-icon" style="background:var(--brand-light)">📊</div>
+        </div>
+      </div>
+
+      <div class="grid gap-6" style="grid-template-columns:1fr 320px">
+        <!-- LEFT: Recent submissions -->
+        <div class="flex-col gap-5">
+          <div class="card animate-slideUp" style="animation-delay:.2s">
+            <div class="card-header">
+              <span class="card-title">📥 Recent Submissions — CS 301: Graph Traversal</span>
+              <div style="display:flex;gap:var(--sp-2)">
+                <button class="btn btn-secondary btn-sm" id="bulkDownload" aria-label="Bulk download all submissions">⬇️ Bulk Download</button>
+                <a href="grading.html" class="btn btn-primary btn-sm">Grade All</a>
+              </div>
+            </div>
+            <div class="table-wrap">
+              <table class="table" aria-label="Student submissions for Graph Traversal Algorithms">
+                <thead>
+                  <tr>
+                    <th scope="col">Student</th>
+                    <th scope="col">Submitted</th>
+                    <th scope="col">File</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Grade</th>
+                    <th scope="col">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="submissionsTable"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Plagiarism overview (Nielsen H6: flexibility) -->
+          <div class="card animate-slideUp" style="animation-delay:.25s">
+            <div class="card-header">
+              <span class="card-title">🔍 Similarity Overview</span>
+              <span class="badge badge-info">Powered by OriginCheck</span>
+            </div>
+            <div class="card-body">
+              <div class="alert alert-info">
+                <span class="alert-icon">ℹ️</span>
+                <div>Similarity analysis completed. <strong>2 submissions</strong> flagged with &gt;20% similarity. <a href="#" style="color:inherit;font-weight:600">Review flagged submissions →</a></div>
+              </div>
+              <div class="table-wrap" style="margin-top:var(--sp-4)">
+                <table class="table">
+                  <thead><tr><th>Student</th><th>Similarity</th><th>Status</th></tr></thead>
+                  <tbody>
+                    <tr><td>Emma Wilson</td><td><div class="flex items-center gap-2"><div class="workload-bar" style="width:80px"><div class="workload-fill" style="width:8%;background:var(--success)"></div></div><span class="text-xs">8%</span></div></td><td><span class="badge badge-success">OK</span></td></tr>
+                    <tr><td>Liam Martinez</td><td><div class="flex items-center gap-2"><div class="workload-bar" style="width:80px"><div class="workload-fill" style="width:12%;background:var(--success)"></div></div><span class="text-xs">12%</span></div></td><td><span class="badge badge-success">OK</span></td></tr>
+                    <tr><td>Noah Davis</td><td><div class="flex items-center gap-2"><div class="workload-bar" style="width:80px"><div class="workload-fill" style="width:34%;background:var(--warning)"></div></div><span class="text-xs text-warning font-semi">34%</span></div></td><td><span class="badge badge-warning">Review</span></td></tr>
+                    <tr><td>Olivia Brown</td><td><div class="flex items-center gap-2"><div class="workload-bar" style="width:80px"><div class="workload-fill" style="width:28%;background:var(--warning)"></div></div><span class="text-xs text-warning font-semi">28%</span></div></td><td><span class="badge badge-warning">Review</span></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT sidebar -->
+        <div class="flex-col gap-4">
+          <!-- My courses -->
+          <div class="card animate-slideUp" style="animation-delay:.2s">
+            <div class="card-header"><span class="card-title">📚 My Courses</span></div>
+            <div class="card-body flex-col gap-3">
+              <a href="grading.html" class="course-pill">
+                <div class="course-accent" style="background:#6366f1"></div>
+                <div style="flex:1"><div style="font-weight:var(--fw-semi);font-size:var(--text-sm)">CS 301</div><div style="font-size:var(--text-xs);color:var(--text-muted)">32 students</div></div>
+                <span class="badge badge-warning">5 pending</span>
+              </a>
+              <a href="grading.html" class="course-pill">
+                <div class="course-accent" style="background:#10b981"></div>
+                <div style="flex:1"><div style="font-weight:var(--fw-semi);font-size:var(--text-sm)">CS 401</div><div style="font-size:var(--text-xs);color:var(--text-muted)">24 students</div></div>
+                <span class="badge badge-success">All graded</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Quick grade -->
+          <div class="card animate-slideUp" style="animation-delay:.25s">
+            <div class="card-header"><span class="card-title">⚡ Quick Actions</span></div>
+            <div class="card-body flex-col gap-3">
+              <a href="grading.html" class="btn btn-primary btn-md w-full">✏️ Start Grading</a>
+              <button class="btn btn-secondary btn-md w-full" id="bulkDownload2">⬇️ Download All Submissions</button>
+              <button class="btn btn-secondary btn-md w-full">📧 Email Students</button>
+            </div>
+          </div>
+
+          <!-- Deadline info -->
+          <div class="card animate-slideUp" style="animation-delay:.3s">
+            <div class="card-header"><span class="card-title">📅 Assignment Deadline</span></div>
+            <div class="card-body">
+              <div style="font-size:var(--text-lg);font-weight:var(--fw-black);margin-bottom:4px">Mar 12, 2026</div>
+              <div class="text-xs text-muted">Graph Traversal Algorithms</div>
+              <div style="margin-top:var(--sp-3)">
+                <div class="flex justify-between text-xs text-muted mb-2"><span>Submissions</span><span>7 / 8</span></div>
+                <div class="progress-wrap"><div class="progress-bar" style="width:87.5%"></div></div>
+              </div>
+              <div class="alert alert-warning mt-4" style="font-size:var(--text-xs)">
+                <span>⚠️</span><span>1 student has not submitted yet.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Bulk Download Modal -->
+<div class="modal-backdrop" id="dlModal" role="dialog" aria-modal="true" aria-labelledby="dlModalTitle">
+  <div class="modal animate-slideUp">
+    <div class="modal-header">
+      <span class="modal-title" id="dlModalTitle">⬇️ Bulk Download</span>
+      <button class="btn btn-ghost btn-icon" id="closeDlModal" aria-label="Close">✕</button>
+    </div>
+    <div class="modal-body">
+      <p class="text-sm text-secondary mb-4">Select which submissions to download as a ZIP archive.</p>
+      <label class="flex items-center gap-3 text-sm" style="padding:var(--sp-3) 0;cursor:pointer">
+        <input type="checkbox" checked id="dlAll" aria-label="Select all submissions"/> <span>All 7 submissions</span>
+      </label>
+      <label class="flex items-center gap-3 text-sm" style="padding:var(--sp-3) 0;cursor:pointer">
+        <input type="checkbox" id="dlPending" aria-label="Select ungraded submissions"/> <span>Ungraded only (5)</span>
+      </label>
+      <label class="flex items-center gap-3 text-sm" style="padding:var(--sp-3) 0;cursor:pointer">
+        <input type="checkbox" id="dlGraded" aria-label="Select graded submissions"/> <span>Graded only (2)</span>
+      </label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary btn-md" id="closeDlModal2">Cancel</button>
+      <button class="btn btn-primary btn-md" onclick="alert('Download started! submissions.zip will be ready shortly.')">⬇️ Download ZIP</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/data.js"></script>
+<script>
+const user = Session.require("instructor");
+if (user) { document.getElementById("sidebarName").textContent = user.name; document.getElementById("sidebarAvatar").textContent = user.avatar; document.getElementById("topAvatar").textContent = user.avatar; }
+const hr = new Date().getHours();
+const greet = hr < 12 ? "Good morning" : hr < 17 ? "Good afternoon" : "Good evening";
+document.getElementById("welcomeMsg").textContent = `${greet}, Dr. Chen`;
+
+const t = localStorage.getItem("hci_theme") || "light";
+document.documentElement.setAttribute("data-theme", t);
+const tb = document.getElementById("themeToggle");
+tb.textContent = t === "dark" ? "☀️" : "🌙";
+tb.addEventListener("click", () => {
+  const cur = document.documentElement.getAttribute("data-theme");
+  const nxt = cur === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", nxt);
+  localStorage.setItem("hci_theme", nxt);
+  tb.textContent = nxt === "dark" ? "☀️" : "🌙";
+});
+
+// Render submissions
+const tbody = document.getElementById("submissionsTable");
+SUBMISSIONS.forEach(s => {
+  const statusBadge = {
+    graded: '<span class="badge badge-success">Graded</span>',
+    pending: '<span class="badge badge-info">Pending</span>',
+    missing: '<span class="badge badge-danger">Missing</span>'
+  }[s.status];
+  tbody.innerHTML += `
+    <tr class="sub-row" data-student="${s.student}" tabindex="0" aria-label="${s.student}, ${s.status}">
+      <td><strong>${s.student}</strong></td>
+      <td>${s.submittedAt ? formatDate(s.submittedAt).split(",")[0] : '—'}</td>
+      <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.fileName || '—'}</td>
+      <td>${statusBadge}</td>
+      <td><strong>${s.grade !== null ? s.grade + '/100' : '—'}</strong></td>
+      <td>
+        ${s.status !== 'missing'
+          ? `<a href="grading.html?sub=${s.id}" class="btn btn-secondary btn-sm">${s.status === 'graded' ? '✏️ Edit' : '✏️ Grade'}</a>`
+          : '<span class="text-xs text-muted">No file</span>'}
+      </td>
+    </tr>`;
+});
+
+// Bulk download
+[document.getElementById("bulkDownload"), document.getElementById("bulkDownload2")].forEach(b => {
+  b?.addEventListener("click", () => document.getElementById("dlModal").classList.add("open"));
+});
+document.getElementById("closeDlModal").addEventListener("click", () => document.getElementById("dlModal").classList.remove("open"));
+document.getElementById("closeDlModal2").addEventListener("click", () => document.getElementById("dlModal").classList.remove("open"));
+document.getElementById("logoutBtn").addEventListener("click", e => { e.preventDefault(); Session.clear(); window.location.href = "index.html"; });
+</script>
+</body>
+</html>
